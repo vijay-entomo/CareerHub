@@ -1,0 +1,35 @@
+npx expo start --web --port 8082
+npx expo export
+{/* TOP MENTORS */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top Mentors</Text>
+          <Pressable style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.backgroundElement, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.mode === 'dark' ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)" }}>
+            <ArrowUpRight size={18} color={theme.text} />
+          </Pressable>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.mentorsScroll}
+        >
+          {TOP_MENTORS.map((mentor) => (
+            <View key={mentor.id} style={styles.mentorCard}>
+              <View style={styles.mentorAvatarWrapper}>
+                <Image source={{ uri: mentor.avatar }} style={styles.mentorAvatar} />
+                <View style={styles.mentorOnlineBadge} />
+              </View>
+              <Text style={styles.mentorName} numberOfLines={1}>{mentor.name}</Text>
+              <Text style={styles.mentorRole} numberOfLines={1}>{mentor.role}</Text>
+              
+              <View style={styles.mentorActions}>
+                <View style={styles.mentorRating}>
+                  <Star size={12} color="#FFC107" fill="#FFC107" />
+                  <Text style={styles.mentorRatingText}>{mentor.rating}</Text>
+                </View>
+                <Pressable style={styles.chatButton}>
+                  <MessageCircle size={14} color={theme.background} />
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </ScrollView>

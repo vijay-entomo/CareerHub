@@ -10,6 +10,7 @@ export type ThemedTextProps = TextProps & {
 
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
+  const styles = createStyles(theme);
 
   return (
     <Text
@@ -30,7 +31,7 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   small: {
     fontSize: 14,
     lineHeight: 20,

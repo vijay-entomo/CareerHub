@@ -8,6 +8,7 @@ import {
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
+import { useTheme } from "@/hooks/use-theme";
 
 import { ExternalLink } from './external-link';
 import { ThemedText } from './themed-text';
@@ -16,6 +17,8 @@ import { ThemedView } from './themed-view';
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
 export default function AppTabs() {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
@@ -34,6 +37,8 @@ export default function AppTabs() {
 }
 
 export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+  const theme = useTheme();
+  const styles = createStyles(theme);
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
@@ -50,6 +55,8 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
 export function CustomTabList(props: TabListProps) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   return (
     <View {...props} style={styles.tabListContainer}>
@@ -75,7 +82,7 @@ export function CustomTabList(props: TabListProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   tabListContainer: {
     position: 'absolute',
     width: '100%',
