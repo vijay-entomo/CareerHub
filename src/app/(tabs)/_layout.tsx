@@ -20,11 +20,13 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/use-theme";
+import { useCommonStyles } from "@/hooks/use-common-styles";
 import { AutoContrastText, AutoContrastIcon } from "@/components/AutoContrast";
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const commonStyles = useCommonStyles();
+  const styles = createStyles(theme, commonStyles);
   const insets = useSafeAreaInsets();
   const [layouts, setLayouts] = useState<
     Record<number, { x: number; width: number }>
@@ -100,8 +102,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
       // Pre-emptively move the visual pill for instant feedback
       const layout = layoutsRef.current[closestIndex];
       if (layout) {
-        indicatorPosition.value = withSpring(layout.x, { damping: 18, stiffness: 200 });
-        indicatorWidth.value = withSpring(layout.width, { damping: 18, stiffness: 200 });
+        indicatorPosition.value = withSpring(layout.x, { damping: 24, stiffness: 150 });
+        indicatorWidth.value = withSpring(layout.width, { damping: 24, stiffness: 150 });
       }
     }
 
@@ -130,12 +132,12 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
     const layout = layouts[state.index];
     if (layout && layout.width > 0) {
       indicatorPosition.value = withSpring(layout.x, {
-        damping: 18,
-        stiffness: 200,
+        damping: 24,
+        stiffness: 150,
       });
       indicatorWidth.value = withSpring(layout.width, {
-        damping: 18,
-        stiffness: 200,
+        damping: 24,
+        stiffness: 150,
       });
     }
   }, [state.index, layouts]);
@@ -282,7 +284,7 @@ export default function TabLayout() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, commonStyles: any) => StyleSheet.create({
   tabBarContainer: {
     position: "absolute",
     bottom: 0,
@@ -300,8 +302,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderRadius: 40,
     overflow: "hidden",
     backgroundColor: theme.mode === 'dark' ? "rgba(40, 40, 40, 0.4)" : "rgba(255, 255, 255, 0.4)",
-    borderWidth: 1.5,
-    borderColor: theme.mode === 'dark' ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.8)",
+    ...commonStyles.liquidGlassBorder,
   },
   tabBar: {
     flexDirection: "row",

@@ -9,6 +9,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { AppFonts } from '@/constants/theme';
+import { useTheme } from "@/hooks/use-theme";
 import { ChevronsRight, Check } from "lucide-react-native";
 
 const BUTTON_HEIGHT = 70;
@@ -20,7 +21,8 @@ interface SwipeButtonProps {
 }
 
 export const SwipeButton = ({ onComplete, title }: SwipeButtonProps) => {
-  const styles = createStyles();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const translateX = useSharedValue(0);
   const maxTranslateX = useSharedValue(
     Dimensions.get("window").width - 32 - THUMB_SIZE - 12,
@@ -89,26 +91,26 @@ export const SwipeButton = ({ onComplete, title }: SwipeButtonProps) => {
       <View style={styles.checkContainer}>
         <Check
           size={28}
-          color="#1A1A1A"
+          color={theme.text}
           strokeWidth={2.5}
         />
       </View>
 
       <GestureDetector gesture={pan}>
         <Animated.View style={[styles.thumb, animatedThumbStyle]}>
-          <ChevronsRight size={28} color="#1A1A1A" />
+          <ChevronsRight size={28} color={theme.primaryForeground} />
         </Animated.View>
       </GestureDetector>
     </View>
   );
 };
 
-const createStyles = () =>
+const createStyles = (theme: any) =>
   StyleSheet.create({
     container: {
       width: "100%",
       height: BUTTON_HEIGHT,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: theme.backgroundElement,
       borderRadius: 999, // Pill shape
       justifyContent: "center",
       paddingHorizontal: 6,
@@ -117,7 +119,7 @@ const createStyles = () =>
     text: {
       fontFamily: AppFonts.urbanist.bold,
       fontSize: 18,
-      color: "#1A1A1A",
+      color: theme.text,
       position: "absolute",
       alignSelf: "center",
       zIndex: 1,
@@ -128,7 +130,7 @@ const createStyles = () =>
       width: THUMB_SIZE,
       height: THUMB_SIZE,
       borderRadius: THUMB_SIZE / 2,
-      backgroundColor: "#FFFFFF",
+      backgroundColor: theme.backgroundElement,
       justifyContent: "center",
       alignItems: "center",
       zIndex: 0,
@@ -136,7 +138,7 @@ const createStyles = () =>
     thumb: {
       width: THUMB_SIZE,
       height: THUMB_SIZE,
-      backgroundColor: "#D7FE03",
+      backgroundColor: theme.primary,
       borderRadius: THUMB_SIZE / 2,
       justifyContent: "center",
       alignItems: "center",

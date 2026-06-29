@@ -17,6 +17,7 @@
     "expo-glass-effect": "~56.0.4",
     "expo-image": "~56.0.11",
     "expo-image-picker": "^56.0.18",
+    "expo-linear-gradient": "^56.0.4",
     "expo-linking": "~56.0.14",
     "expo-router": "~56.2.11",
     "expo-splash-screen": "~56.0.10",
@@ -24,6 +25,7 @@
     "expo-symbols": "~56.0.6",
     "expo-system-ui": "~56.0.5",
     "expo-web-browser": "~56.0.5",
+    "jimp": "^1.6.1",
     "lucide-react-native": "^1.20.0",
     "moti": "^0.30.0",
     "react": "19.2.3",
@@ -42,6 +44,7 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~56.0.4",
+    "gh-pages": "^6.3.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -50,7 +53,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "predeploy": "expo export -p web && node ./scripts/rename-expo.js",
+    "deploy": "gh-pages -d dist"
   },
   "private": true
 }

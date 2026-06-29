@@ -22,6 +22,7 @@ import Animated, {
   Easing,
   interpolate,
   interpolateColor,
+  runOnJS,
   useAnimatedProps,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -307,17 +308,28 @@ const AnnouncementCard = ({
       {images.length > 1 && (
         <Animated.ScrollView
           horizontal
-          pagingEnabled
           showsHorizontalScrollIndicator={false}
+          snapToInterval={width - 40}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          disableIntervalMomentum={true}
           onScroll={handleImageScroll}
           scrollEventThrottle={16}
-          style={StyleSheet.absoluteFill as any}
+          style={[
+            StyleSheet.absoluteFill as any,
+            // @ts-ignore
+            { scrollSnapType: "x mandatory" },
+          ]}
         >
           {images.map((img: string, idx: number) => (
             <Image
               key={idx}
               source={{ uri: img }}
-              style={{ width: width - 40, height: 320 }}
+              style={[
+                { width: width - 40, height: 320 },
+                // @ts-ignore
+                { scrollSnapAlign: "start", scrollSnapStop: "always" }
+              ]}
             />
           ))}
         </Animated.ScrollView>
@@ -526,6 +538,11 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useSharedValue(0);
   const scrollY = useSharedValue(0);
+  const lastIndex = useSharedValue(0);
+
+  const updateActiveIndex = (index: number) => {
+    setActiveIndex(index);
+  };
 
   const handleVerticalScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -564,15 +581,16 @@ export default function Home() {
       ),
     };
   }) as any;
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    scrollX.value = event.nativeEvent.contentOffset.x;
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / (CARD_WIDTH + 16));
-    if (index !== activeIndex && index >= 0 && index < BANNER_DATA.length) {
-      setActiveIndex(index);
-    }
-  };
+  const handleScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x;
+      const index = Math.round(event.contentOffset.x / (CARD_WIDTH + 16));
+      if (index !== lastIndex.value && index >= 0 && index < BANNER_DATA.length) {
+        lastIndex.value = index;
+        runOnJS(updateActiveIndex)(index);
+      }
+    },
+  });
 
   return (
     <View style={commonStyles.container}>
@@ -672,7 +690,7 @@ export default function Home() {
 
         {/* Simple Carousel Section */}
         <View style={styles.carouselContainer}>
-          <FlatList
+          <Animated.FlatList
             data={BANNER_DATA}
             keyExtractor={(item) => item.id.toString()}
             horizontal

@@ -86,8 +86,8 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: theme.background, // White pill
-    paddingVertical: 18,
-    paddingHorizontal: 24,
+    paddingVertical: 17, // Offset 1px border to match primary height exactly
+    paddingHorizontal: 23, // Offset 1px border
     borderRadius: BorderRadius.button, // Apple HIG standard button radius
     alignItems: "center",
     justifyContent: "center",

@@ -80,6 +80,7 @@ export default function ProfileSettings() {
               styles.settingRow,
               pressed && { backgroundColor: "rgba(150,150,150,0.1)" },
             ]}
+            onPress={() => router.push("/master-profile/master-profile")}
           >
             <View style={styles.settingLeft}>
               <User size={20} color={theme.textSecondary} />

@@ -1,6 +1,6 @@
 import { useTheme } from "@/hooks/use-theme";
 import { useRouter } from "expo-router";
-import { Check, ChevronLeft, Lock, Mail } from "lucide-react-native";
+import { ChevronLeft, Lock, Mail } from "lucide-react-native";
 import { MotiView } from "moti";
 import { useState } from "react";
 import {
@@ -14,8 +14,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/Button";
+import { Checkbox } from "../components/Checkbox";
 import { Input } from "../components/Input";
-import { FacebookIcon, GoogleIcon } from "../components/SocialIcons";
+import { SocialAuthButton } from "../components/SocialAuthButton";
 import { BorderRadius } from "../constants/theme";
 
 export default function Login() {
@@ -76,16 +77,11 @@ export default function Login() {
             >
               <Text style={styles.title}>Sign In</Text>
               <Text style={styles.subtitle}>
-                Welcome back you've been missed
+                Welcome back! You've been missed.
               </Text>
             </MotiView>
 
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: "timing", duration: 600, delay: 150 }}
-              style={styles.formContainer}
-            >
+            <View style={styles.formContainer}>
               <Input
                 label="Email ID"
                 placeholder="Enter Email ID"
@@ -113,42 +109,11 @@ export default function Login() {
               />
 
               <View style={styles.actionsRow}>
-                <TouchableOpacity
-                  style={styles.rememberButton}
-                  onPress={() => setRememberMe(!rememberMe)}
-                >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      rememberMe && styles.checkboxChecked,
-                    ]}
-                  >
-                    {rememberMe && (
-                      <View
-                        style={{ width: 14, height: 14, position: "relative" }}
-                      >
-                        <Check
-                          size={14}
-                          color={theme.primaryForeground}
-                          strokeWidth={3}
-                        />
-                        <MotiView
-                          from={{ width: 14 }}
-                          animate={{ width: 0 }}
-                          transition={{ type: "timing", duration: 250 }}
-                          style={{
-                            position: "absolute",
-                            right: -1, // slight offset to prevent edge bleeding
-                            top: -1,
-                            bottom: -1,
-                            backgroundColor: theme.primary, // Mask matches background
-                          }}
-                        />
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.rememberText}>Remember Me</Text>
-                </TouchableOpacity>
+                <Checkbox
+                  checked={rememberMe}
+                  onChange={setRememberMe}
+                  label="Remember Me"
+                />
 
                 <TouchableOpacity
                   onPress={() => router.push("/forgot-password")}
@@ -158,7 +123,7 @@ export default function Login() {
               </View>
 
               <Button
-                title="Login"
+                title="Sign In"
                 onPress={handleLogin}
                 style={styles.signInButton}
                 textStyle={{ fontSize: 16 }}
@@ -171,21 +136,10 @@ export default function Login() {
               </View>
 
               <View style={styles.socialRow}>
-                <TouchableOpacity style={styles.socialButton}>
-                  <View style={styles.socialIconContainer}>
-                    <FacebookIcon size={20} />
-                  </View>
-                  <Text style={styles.socialButtonText}>Facebook</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.socialButton}>
-                  <View style={styles.socialIconContainer}>
-                    <GoogleIcon size={20} />
-                  </View>
-                  <Text style={styles.socialButtonText}>Google</Text>
-                </TouchableOpacity>
+                <SocialAuthButton provider="facebook" />
+                <SocialAuthButton provider="google" />
               </View>
-            </MotiView>
+            </View>
 
             {/* Spacer */}
             <View style={{ flex: 1 }} />
@@ -253,30 +207,6 @@ const createStyles = (theme: any) =>
       marginTop: -4,
       marginBottom: 32,
     },
-    rememberButton: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    checkbox: {
-      width: 20,
-      height: 20,
-      borderRadius: 4,
-      borderWidth: 1.5,
-      borderColor: theme.text, // Sharp border
-      marginRight: 8,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.background,
-    },
-    checkboxChecked: {
-      backgroundColor: theme.primary,
-      borderColor: theme.primary,
-    },
-    rememberText: {
-      fontSize: 14,
-      fontFamily: theme.fonts.semiBold,
-      color: theme.text,
-    },
     forgotText: {
       fontSize: 14,
       fontFamily: theme.fonts.semiBold,
@@ -306,28 +236,6 @@ const createStyles = (theme: any) =>
       flexDirection: "row",
       justifyContent: "space-between",
     },
-    socialButton: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#FFFFFF",
-      borderRadius: BorderRadius.button, // Standard Apple button radius
-      paddingVertical: 14,
-      borderWidth: 1,
-      borderColor: theme.backgroundSelected,
-      marginHorizontal: 8, // Apple standard 8pt grid spacing
-    },
-    socialIconContainer: {
-      marginRight: 10,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    socialButtonText: {
-      fontSize: 14,
-      fontFamily: theme.fonts.bold,
-      color: theme.text,
-    },
     footerContainer: {
       alignItems: "center",
       marginTop: 40,
@@ -343,4 +251,3 @@ const createStyles = (theme: any) =>
       textDecorationLine: "underline",
     },
   });
-

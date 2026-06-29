@@ -75,18 +75,15 @@ export const CourseCard = ({
               style={[
                 styles.favouriteBlurSmall,
                 {
-                  backgroundColor:
-                    theme.mode === "dark"
-                      ? "rgba(0,0,0,0.6)"
-                      : "rgba(255,255,255,0.8)",
+                  backgroundColor: theme.backgroundElement + 'E6', // 90% opacity hex
                 },
               ]}
             >
               <Animated.View style={animatedStyle}>
                 <Heart
                   size={14}
-                  color={isFav ? "#FF3B30" : theme.text}
-                  fill={isFav ? "#FF3B30" : "transparent"}
+                  color={isFav ? theme.danger : theme.text}
+                  fill={isFav ? theme.danger : "transparent"}
                   strokeWidth={2.5}
                 />
               </Animated.View>
@@ -141,18 +138,15 @@ export const CourseCard = ({
             style={[
               styles.favouriteBlur,
               {
-                backgroundColor:
-                  theme.mode === "dark"
-                    ? "rgba(0,0,0,0.6)"
-                    : "rgba(255,255,255,0.8)",
+                backgroundColor: theme.backgroundElement + 'E6',
               },
             ]}
           >
             <Animated.View style={animatedStyle}>
               <Heart
                 size={18}
-                color={isFav ? "#FF3B30" : theme.text}
-                fill={isFav ? "#FF3B30" : "transparent"}
+                color={isFav ? theme.danger : theme.text}
+                fill={isFav ? theme.danger : "transparent"}
                 strokeWidth={2.5}
               />
             </Animated.View>
@@ -165,11 +159,11 @@ export const CourseCard = ({
             <View
               style={[
                 styles.ratingBadge,
-                { backgroundColor: "#F59E0B15" },
+                { backgroundColor: theme.warning + '20' },
               ]}
             >
-              <Star size={14} color="#F59E0B" fill="#F59E0B" />
-              <Text style={[styles.ratingText, { color: "#F59E0B" }]}>
+              <Star size={14} color={theme.warning} fill={theme.warning} />
+              <Text style={[styles.ratingText, { color: theme.warning }]}>
                 {course.rating}
               </Text>
             </View>
@@ -189,7 +183,7 @@ export const CourseCard = ({
 
         {(course.students || course.category) && (
           <View style={styles.metaRow}>
-            <User size={14} color={theme.primary} />
+            <User size={14} color={theme.textSecondary} />
             <Text style={styles.metaText}>
               {course.students ? `${course.students} Professionals` : ""}
               {course.students && course.category ? " • " : ""}
@@ -205,31 +199,20 @@ export const CourseCard = ({
 const createStyles = (theme: any) =>
   StyleSheet.create({
     horizontalCard: {
-      backgroundColor:
-        theme.mode === "dark" ? "rgba(255,255,255,0.03)" : "#FFFFFF",
-      borderRadius: 20,
+      backgroundColor: theme.backgroundElement,
+      borderRadius: 16, // Better to use a standard number here instead of 20
       padding: 12,
       flexDirection: "row",
       gap: 16,
       borderWidth: 1,
-      borderColor: theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "#E5E5E5",
-      ...(theme.mode === "light"
-        ? {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 12,
-            elevation: 2,
-          }
-        : {}),
+      borderColor: theme.border,
     },
     horizontalImageWrapper: {
       width: 80,
       height: 80,
-      borderRadius: 16,
+      borderRadius: 12,
       overflow: "hidden",
-      backgroundColor:
-        theme.mode === "dark" ? "rgba(255,255,255,0.1)" : "#F0F0F0",
+      backgroundColor: theme.backgroundSelected,
     },
     horizontalContent: {
       flex: 1,
@@ -244,8 +227,7 @@ const createStyles = (theme: any) =>
     progressBarBg: {
       flex: 1,
       height: 6,
-      backgroundColor:
-        theme.mode === "dark" ? "rgba(255,255,255,0.1)" : "#E5E5E5",
+      backgroundColor: theme.backgroundSelected,
       borderRadius: 3,
       overflow: "hidden",
     },
@@ -261,21 +243,11 @@ const createStyles = (theme: any) =>
       width: 35,
     },
     verticalCard: {
-      backgroundColor:
-        theme.mode === "dark" ? "rgba(255,255,255,0.03)" : "#FFFFFF",
-      borderRadius: 24,
+      backgroundColor: theme.backgroundElement,
+      borderRadius: 16,
       borderWidth: 1,
-      borderColor: theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "#E5E5E5",
+      borderColor: theme.border,
       overflow: "hidden",
-      ...(theme.mode === "light"
-        ? {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 12,
-            elevation: 2,
-          }
-        : {}),
     },
     verticalImageWrapper: {
       width: "100%",
@@ -350,8 +322,7 @@ const createStyles = (theme: any) =>
       paddingHorizontal: 8,
       paddingVertical: 6,
       borderRadius: 12,
-      backgroundColor:
-        theme.mode === "dark" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.9)",
+      backgroundColor: theme.backgroundElement,
     },
     imageTagText: {
       fontSize: 11,

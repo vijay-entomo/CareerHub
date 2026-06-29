@@ -17,14 +17,17 @@ import Animated, {
   FadeInDown,
   FadeOutUp,
   LinearTransition,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { useAnimatedScrollHandler } from "react-native-reanimated";
+import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { AutoContrastText } from "../components/AutoContrast";
+
+const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 import { Header } from "../components/Header";
 import { useTheme } from "../hooks/use-theme";
 import { AnimatedTabs } from "../components/AnimatedTabs";
@@ -135,12 +138,13 @@ export default function AnnouncementsFeed() {
     (item) => activeTab === "all" || item.categoryId === activeTab,
   );
 
+  const INNER_CARD_WIDTH = Dimensions.get("window").width - 80; // Screen width (minus 40px outer padding, minus 40px inner card padding)
+
   const handleImageScroll = (
     event: NativeSyntheticEvent<NativeScrollEvent>,
   ) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
-    const cardContentWidth = Dimensions.get("window").width - 80 + 12;
-    const index = Math.round(scrollPosition / cardContentWidth);
+    const index = Math.round(scrollPosition / INNER_CARD_WIDTH);
     if (index !== activeImageIndex && index >= 0 && index < 3) {
       setActiveImageIndex(index);
     }
@@ -155,7 +159,7 @@ export default function AnnouncementsFeed() {
     <View style={commonStyles.container}>
       <Header title="All Announcements" scrollY={scrollY} />
 
-      <Animated.ScrollView
+      <AnimatedGHScrollView
         contentContainerStyle={commonStyles.scrollContent}
         showsVerticalScrollIndicator={false}
         onScroll={handleVerticalScroll}
@@ -212,23 +216,33 @@ export default function AnnouncementsFeed() {
 
             {item.type === "carousel" && item.images && (
               <>
-                <Animated.ScrollView
+                <AnimatedGHScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  pagingEnabled
+                  snapToInterval={INNER_CARD_WIDTH}
+                  snapToAlignment="start"
                   decelerationRate="fast"
+                  disableIntervalMomentum={true}
                   onScroll={handleImageScroll}
                   scrollEventThrottle={16}
-                  style={styles.imageCarousel}
+                  style={[
+                    styles.imageCarousel,
+                    // @ts-ignore
+                    { scrollSnapType: "x mandatory" },
+                  ]}
                 >
                   {item.images.map((imgUri, index) => (
                     <Image
                       key={index}
                       source={{ uri: imgUri }}
-                      style={styles.carouselImage}
+                      style={[
+                        styles.carouselImage,
+                        // @ts-ignore
+                        { scrollSnapAlign: "start", scrollSnapStop: "always" }
+                      ]}
                     />
                   ))}
-                </Animated.ScrollView>
+                </AnimatedGHScrollView>
                 <View style={styles.paginationDots}>
                   {item.images.map((_, i) => (
                     <View
@@ -335,7 +349,7 @@ export default function AnnouncementsFeed() {
             />
           </Animated.View>
         )}
-      </Animated.ScrollView>
+      </AnimatedGHScrollView>
     </View>
   );
 }
@@ -454,15 +468,13 @@ const createStyles = (theme: any) =>
       color: theme.textSecondary,
     },
     imageCarousel: {
-      width: Dimensions.get("window").width - 80 + 12,
+      width: Dimensions.get("window").width - 80,
       marginBottom: 16,
-      overflow: "visible",
+      borderRadius: 16,
     },
     carouselImage: {
       width: Dimensions.get("window").width - 80,
-      height: 180,
-      borderRadius: 16,
-      marginRight: 12,
+      height: 250, // Slightly reduced to fit padded container proportionally
     },
     paginationDots: {
       flexDirection: "row",

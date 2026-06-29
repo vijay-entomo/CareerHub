@@ -4,6 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { AnimatedTabs } from "../components/AnimatedTabs";
 import { CourseCard } from "../components/CourseCard";
 import { Header } from "../components/Header";
+import { BottomSheetModal } from "../components/BottomSheetModal";
 import { useTheme } from "../hooks/use-theme";
 
 import {
@@ -16,6 +17,7 @@ import {
   Check,
 } from "lucide-react-native";
 import { router } from "expo-router";
+import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 
 const SORT_BY = ["Most Relevant", "Newest", "Highest Rated"];
 const LEVELS = ["All Levels", "Beginner", "Intermediate", "Advanced"];
@@ -91,6 +93,11 @@ export default function AllCourses() {
   const [selectedLevel, setSelectedLevel] = useState(LEVELS[0]);
   const [selectedFormat, setSelectedFormat] = useState(FORMATS[0]);
 
+  const scrollY = useSharedValue(0);
+  const handleScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+
   const renderFilterPill = (
     label: string,
     activeValue: string,
@@ -141,6 +148,7 @@ export default function AllCourses() {
       <Header
         title="All Courses"
         showBack={true}
+        scrollY={scrollY}
         rightComponent={
           <Pressable
             onPress={() => router.push("/course-search")}
@@ -151,9 +159,11 @@ export default function AllCourses() {
         }
       />
 
-      <ScrollView
+      <Animated.ScrollView
         contentContainerStyle={commonStyles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {/* TABS & FILTER */}
         <View style={styles.tabsRow}>
@@ -184,57 +194,22 @@ export default function AllCourses() {
             ))
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* FILTER MODAL */}
-      <Modal
+      <BottomSheetModal
         visible={isFilterVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsFilterVisible(false)}
+        onClose={() => setIsFilterVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <Pressable
-            style={styles.modalBackdrop}
-            onPress={() => setIsFilterVisible(false)}
-          />
-          <View
-            style={[
-              styles.modalContent,
-              { backgroundColor: theme.background },
-            ]}
-          >
-            {/* Drag Handle */}
-            <View style={styles.dragHandleContainer}>
-              <View
-                style={[
-                  styles.dragHandle,
-                  {
-                    backgroundColor:
-                      theme.mode === "dark" ? "rgba(255,255,255,0.2)" : "#E5E5E5",
-                  },
-                ]}
-              />
-            </View>
+        {/* Filter Sections */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: 0, paddingBottom: 24, paddingHorizontal: 0 }}
+        >
+          <Text style={[styles.modalTitle, { color: theme.text, marginBottom: 16 }]}>
+            Filter Options
+          </Text>
 
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>
-                Filter Options
-              </Text>
-              <Pressable
-                onPress={() => setIsFilterVisible(false)}
-                style={styles.modalCloseButton}
-              >
-                <X size={20} color={theme.textSecondary} />
-              </Pressable>
-            </View>
-
-            {/* Filter Sections */}
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
-            >
               <Text style={[styles.filterSectionTitle, { color: theme.text }]}>
                 Sort By
               </Text>
@@ -263,41 +238,38 @@ export default function AllCourses() {
               </View>
             </ScrollView>
 
-            {/* Sticky Action Footer */}
-            <View
-              style={[
-                styles.modalFooter,
-                { borderTopColor: theme.border },
-                { backgroundColor: theme.background },
-              ]}
-            >
-              <Pressable
-                style={styles.resetButton}
-                onPress={() => {
-                  setSelectedSort(SORT_BY[0]);
-                  setSelectedLevel(LEVELS[0]);
-                  setSelectedFormat(FORMATS[0]);
-                }}
-              >
-                <Text style={[styles.resetButtonText, { color: theme.text }]}>
-                  Reset
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[
-                  styles.applyButton,
-                  { backgroundColor: theme.primary },
-                ]}
-                onPress={() => setIsFilterVisible(false)}
-              >
-                <Text style={[styles.applyButtonText, { color: theme.primaryForeground }]}>
-                  Apply Filters
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+        {/* Sticky Action Footer */}
+        <View
+          style={[
+            styles.modalFooter,
+            { borderTopColor: theme.border, backgroundColor: theme.background },
+          ]}
+        >
+          <Pressable
+            style={styles.resetButton}
+            onPress={() => {
+              setSelectedSort(SORT_BY[0]);
+              setSelectedLevel(LEVELS[0]);
+              setSelectedFormat(FORMATS[0]);
+            }}
+          >
+            <Text style={[styles.resetButtonText, { color: theme.text }]}>
+              Reset
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.applyButton,
+              { backgroundColor: theme.primary },
+            ]}
+            onPress={() => setIsFilterVisible(false)}
+          >
+            <Text style={[styles.applyButtonText, { color: theme.primaryForeground }]}>
+              Apply Filters
+            </Text>
+          </Pressable>
         </View>
-      </Modal>
+      </BottomSheetModal>
     </View>
   );
 }
@@ -330,52 +302,16 @@ const createStyles = (theme: any) =>
       textAlign: "center",
       marginTop: 40,
     },
-    modalOverlay: {
-      flex: 1,
-      justifyContent: "flex-end",
-    },
-    modalBackdrop: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0,0,0,0.5)",
-    },
-    modalContent: {
-      borderTopLeftRadius: 32,
-      borderTopRightRadius: 32,
-      maxHeight: "90%",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: -8 },
-      shadowOpacity: 0.1,
-      shadowRadius: 24,
-      elevation: 10,
-    },
-    dragHandleContainer: {
-      alignItems: "center",
-      paddingTop: 16,
-      paddingBottom: 8,
-    },
-    dragHandle: {
-      width: 48,
-      height: 5,
-      borderRadius: 2.5,
-    },
     modalHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 24,
-      paddingBottom: 16,
+      paddingBottom: 8,
     },
     modalTitle: {
       fontFamily: theme.fonts.bold,
       fontSize: 20,
-    },
-    modalCloseButton: {
-      padding: 8,
-      marginRight: -8,
     },
     filterSectionTitle: {
       fontFamily: theme.fonts.bold,
@@ -403,7 +339,8 @@ const createStyles = (theme: any) =>
     },
     modalFooter: {
       flexDirection: "row",
-      padding: 24,
+      paddingVertical: 24,
+      paddingHorizontal: 0,
       paddingBottom: 40, // extra padding for safe area
       borderTopWidth: 1,
       gap: 16,

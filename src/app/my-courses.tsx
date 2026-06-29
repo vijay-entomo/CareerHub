@@ -96,7 +96,13 @@ export default function MyCourses() {
         <View style={styles.listContainer}>
           {filteredCourses.length === 0 ? (
             <Text style={styles.emptyText}>
-              No courses found in this category.
+              {activeTab === "favourite"
+                ? "You haven't saved any courses yet. Tap the bookmark icon on a course to save it here."
+                : activeTab === "completed"
+                ? "You haven't completed any courses yet. Keep learning to see your achievements here."
+                : activeTab === "in_progress"
+                ? "No courses in progress. Start a new course to begin learning."
+                : "No courses found. Explore our catalog to find something new."}
             </Text>
           ) : (
             filteredCourses.map((course) => (

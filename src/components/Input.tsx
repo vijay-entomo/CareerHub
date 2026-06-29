@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TextInput, View, Text, StyleSheet, TextInputProps, TouchableOpacity } from 'react-native';
 import { useTheme } from "@/hooks/use-theme";
 import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
+import { AnimatePresence, MotiView } from 'moti';
 import { BorderRadius } from '../constants/theme';
 
 interface InputProps extends TextInputProps {
@@ -36,7 +37,7 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
 
         <TextInput
           style={styles.input}
-          placeholderTextColor="#A0A0A5"
+          placeholderTextColor={theme.textSecondary}
           secureTextEntry={isSecureVisible}
           onFocus={(e) => {
             setIsFocused(true);
@@ -50,7 +51,7 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
         />
 
         {secureTextEntry && (
-          <TouchableOpacity onPress={() => setIsSecureVisible(!isSecureVisible)} style={styles.rightAction}>
+          <TouchableOpacity onPress={() => setIsSecureVisible(!isSecureVisible)} style={styles.rightAction} hitSlop={10}>
             {isSecureVisible ? (
               <EyeOff size={20} color={theme.textSecondary} />
             ) : (
@@ -59,7 +60,20 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
           </TouchableOpacity>
         )}
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      <View style={styles.errorContainer}>
+        <AnimatePresence>
+          {error ? (
+            <MotiView
+              from={{ opacity: 0, translateY: -4 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              exit={{ opacity: 0, translateY: -4 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            >
+              <Text style={styles.errorText}>{error}</Text>
+            </MotiView>
+          ) : null}
+        </AnimatePresence>
+      </View>
     </View>
   );
 };
@@ -67,7 +81,7 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 8, // Reduced since errorContainer now holds the bottom padding
   },
   label: {
     fontSize: 14,
@@ -78,7 +92,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.backgroundElement,
     borderRadius: BorderRadius.input, // Standard Apple radius
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -93,11 +107,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     boxShadow: `0px 0px 6px ${theme.primaryGlow}`, // For Android glow
   },
   inputError: {
-    borderColor: '#FF3B30',
+    borderColor: theme.danger,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: theme.fonts.medium,
     color: theme.text,
     padding: 0,
@@ -110,11 +124,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingLeft: 12,
     paddingRight: 4,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    minHeight: 22,
+    justifyContent: 'center',
   },
   errorText: {
     fontSize: 12,
     fontFamily: theme.fonts.medium,
-    color: '#FF3B30',
-    marginTop: 6,
+    color: theme.danger,
+    marginTop: 4,
   },
 });

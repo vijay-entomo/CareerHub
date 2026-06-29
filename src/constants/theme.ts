@@ -71,6 +71,9 @@ export const Colors = {
     primaryForeground: getContrastColor(lightPrimary), // Auto-adjusts!
     primaryGlow: getGlowColor(lightPrimary),
     primaryBorder: getBorderColor(lightPrimary),
+    danger: "#FF3B30",
+    warning: "#F59E0B",
+    success: "#34C759",
   },
   dark: {
     text: "#ffffff",
@@ -83,6 +86,9 @@ export const Colors = {
     primaryForeground: getContrastColor(darkPrimary),
     primaryGlow: getGlowColor(darkPrimary),
     primaryBorder: getBorderColor(darkPrimary),
+    danger: "#FF453A",
+    warning: "#FF9F0A",
+    success: "#32D74B",
   },
 } as const;
 
@@ -113,20 +119,22 @@ export const Fonts = Platform.select({
   },
 });
 
+const isWeb = Platform.OS === "web";
+
 export const AppFonts = {
   urbanist: {
-    regular: "Urbanist_400Regular",
-    medium: "Urbanist_500Medium",
-    semiBold: "Urbanist_600SemiBold",
-    bold: "Urbanist_700Bold",
-    black: "Urbanist_900Black",
+    regular: isWeb ? "'Urbanist', sans-serif" : "Urbanist_400Regular",
+    medium: isWeb ? "'Urbanist', sans-serif" : "Urbanist_500Medium",
+    semiBold: isWeb ? "'Urbanist', sans-serif" : "Urbanist_600SemiBold",
+    bold: isWeb ? "'Urbanist', sans-serif" : "Urbanist_700Bold",
+    black: isWeb ? "'Urbanist', sans-serif" : "Urbanist_900Black",
   },
   inter: {
-    regular: "Inter_400Regular",
-    medium: "Inter_500Medium",
-    semiBold: "Inter_600SemiBold",
-    bold: "Inter_700Bold",
-    black: "Inter_900Black",
+    regular: isWeb ? "'Inter', sans-serif" : "Inter_400Regular",
+    medium: isWeb ? "'Inter', sans-serif" : "Inter_500Medium",
+    semiBold: isWeb ? "'Inter', sans-serif" : "Inter_600SemiBold",
+    bold: isWeb ? "'Inter', sans-serif" : "Inter_700Bold",
+    black: isWeb ? "'Inter', sans-serif" : "Inter_900Black",
   },
 } as const;
 
@@ -146,6 +154,6 @@ export const MaxContentWidth = 800;
 export const BorderRadius = {
   button: 0, // Centralized button radius
   input: 0, // Centralized input radius
-  card: 32,
+  card: 16,
   pill: 999,
 } as const;

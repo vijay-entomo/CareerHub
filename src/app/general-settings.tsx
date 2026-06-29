@@ -4,6 +4,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
+import { AnimatePresence, MotiView } from "moti";
 
 import { AppFonts } from "@/constants/theme";
 import { useCommonStyles } from "@/hooks/use-common-styles";
@@ -78,7 +79,18 @@ export default function GeneralSettings() {
                     />
                     <Text style={styles.settingText}>{preset.name}</Text>
                   </View>
-                  {isActive && <Check size={20} color={theme.text} />}
+                  <AnimatePresence>
+                    {isActive && (
+                      <MotiView
+                        from={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        <Check size={20} color={theme.text} />
+                      </MotiView>
+                    )}
+                  </AnimatePresence>
                 </Pressable>
                 {index < COLOR_PRESETS.length - 1 && (
                   <View style={styles.divider} />
@@ -110,7 +122,18 @@ export default function GeneralSettings() {
                       <Text style={styles.settingDesc}>{preset.desc}</Text>
                     </View>
                   </View>
-                  {isActive && <Check size={20} color={theme.text} />}
+                  <AnimatePresence>
+                    {isActive && (
+                      <MotiView
+                        from={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        <Check size={20} color={theme.text} />
+                      </MotiView>
+                    )}
+                  </AnimatePresence>
                 </Pressable>
                 {index < FONT_PRESETS.length - 1 && (
                   <View style={styles.divider} />

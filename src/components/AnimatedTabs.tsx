@@ -32,15 +32,15 @@ interface AnimatedTabsProps {
 const AnimatedTabItem = ({ tab, isActive, count, onPress, onLayout }: any) => {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const progress = useSharedValue(isActive ? 0 : 1);
-
-  React.useEffect(() => {
-    progress.value = withTiming(isActive ? 0 : 1, { duration: 200 });
-  }, [isActive, progress]);
-
-  const animatedBgStyle = useAnimatedStyle(() => {
+  const activeOpacity = useAnimatedStyle(() => {
     return {
-      opacity: progress.value,
+      opacity: withTiming(isActive ? 1 : 0, { duration: 200 }),
+    };
+  });
+
+  const inactiveOpacity = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(isActive ? 0 : 1, { duration: 200 }),
     };
   });
 
@@ -52,15 +52,28 @@ const AnimatedTabItem = ({ tab, isActive, count, onPress, onLayout }: any) => {
       onPress={onPress}
       style={styles.tabItemContainer}
     >
+      {/* Inactive Background */}
       <Animated.View
         style={[
           StyleSheet.absoluteFill as any,
           styles.tabBg,
           { backgroundColor: theme.backgroundElement },
-          animatedBgStyle,
+          inactiveOpacity,
         ]}
         pointerEvents="none"
       />
+      
+      {/* Active Background */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill as any,
+          styles.tabBg,
+          { backgroundColor: theme.primary },
+          activeOpacity,
+        ]}
+        pointerEvents="none"
+      />
+
       {isActive ? (
         <>
           {Icon && (
@@ -142,28 +155,6 @@ export function AnimatedTabs({
     }
   };
 
-  const activeMeasurement = tabMeasurements[activeTab];
-  const indicatorStyle = useAnimatedStyle(() => {
-    if (!activeMeasurement) return { opacity: 0 };
-    return {
-      transform: [
-        {
-          translateX: withSpring(activeMeasurement.x, {
-            damping: 20,
-            stiffness: 200,
-            mass: 0.8,
-          }),
-        },
-      ],
-      width: withSpring(activeMeasurement.width, {
-        damping: 20,
-        stiffness: 200,
-        mass: 0.8,
-      }),
-      opacity: withTiming(1, { duration: 150 }),
-    };
-  });
-
   return (
     <ScrollView
       ref={tabScrollRef}
@@ -173,22 +164,12 @@ export function AnimatedTabs({
       style={styles.tabsWrapper}
     >
       <View style={styles.tabsRelative}>
-        {/* The single sliding indicator */}
-        <Animated.View
-          style={[
-            styles.activeTabIndicator,
-            { backgroundColor: theme.primary },
-            indicatorStyle,
-          ]}
-          pointerEvents="none"
-        />
-
         {/* The individual tabs */}
         <View style={styles.tabsLayoutRow}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
-              <AnimatedTabItem
+               <AnimatedTabItem
                 key={tab.id}
                 tab={tab}
                 isActive={isActive}
@@ -242,13 +223,7 @@ const createStyles = (theme: any) =>
       borderRadius: 100,
       zIndex: -1,
     },
-    activeTabIndicator: {
-      position: "absolute",
-      top: 0,
-      bottom: 0,
-      borderRadius: 100,
-      zIndex: 0,
-    },
+
     tabText: {
       fontFamily: AppFonts.urbanist.medium,
       fontSize: 15,

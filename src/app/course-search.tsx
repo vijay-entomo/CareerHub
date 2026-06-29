@@ -1,3 +1,4 @@
+import { AnimatedSearchBar } from "@/components/AnimatedSearchBar";
 import { CourseCard } from "@/components/CourseCard";
 import { Header } from "@/components/Header";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -158,22 +159,7 @@ export default function CourseSearchScreen() {
     scrollY.value = event.contentOffset.y;
   });
 
-  const animatedSearchBarStyle = useAnimatedStyle(() => {
-    const size = interpolate(scrollY.value, [0, 100], [44, 36], "clamp");
-    return {
-      height: size,
-      borderRadius: size / 2,
-    };
-  });
-
-  const animatedSearchBtnStyle = useAnimatedStyle(() => {
-    const size = interpolate(scrollY.value, [0, 100], [36, 28], "clamp");
-    return {
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-    };
-  });
+  // Use AnimatedSearchBar internally now
 
   useEffect(() => {
     if (!q) {
@@ -205,52 +191,21 @@ export default function CourseSearchScreen() {
         showBack={true}
         scrollY={scrollY}
         customTitleComponent={
-          <Animated.View
-            style={[
-              styles.searchBarContainer,
-              {
-                borderColor: theme.border,
-                backgroundColor: theme.backgroundElement,
-              },
-              animatedSearchBarStyle,
-            ]}
-          >
-            <TextInput
-              ref={inputRef}
-              style={[
-                styles.searchInput,
-                { color: theme.text, fontFamily: theme.fonts.medium },
-              ]}
-              placeholder="Search..."
-              placeholderTextColor={theme.textSecondary}
-              value={query}
-              onChangeText={(t) => {
-                setQuery(t);
-                if (t === "") setSubmittedQuery("");
-              }}
-              onSubmitEditing={(e) => handleSearch(e.nativeEvent.text)}
-              returnKeyType="search"
-            />
-            {query.length > 0 && (
-              <Pressable
-                onPress={() => {
-                  setQuery("");
-                  setSubmittedQuery("");
-                  inputRef.current?.focus();
-                }}
-                style={{ padding: 6 }}
-              >
-                <X size={16} color={theme.textSecondary} />
-              </Pressable>
-            )}
-            <Pressable onPress={() => handleSearch(query)}>
-              <Animated.View
-                style={[styles.searchButton, animatedSearchBtnStyle]}
-              >
-                <Search size={16} color="#000000" />
-              </Animated.View>
-            </Pressable>
-          </Animated.View>
+          <AnimatedSearchBar
+            ref={inputRef}
+            value={query}
+            onChangeText={(t) => {
+              setQuery(t);
+              if (t === "") setSubmittedQuery("");
+            }}
+            onSubmit={handleSearch}
+            onClear={() => {
+              setQuery("");
+              setSubmittedQuery("");
+              inputRef.current?.focus();
+            }}
+            scrollY={scrollY}
+          />
         }
         rightComponent={<View />}
       />
@@ -287,7 +242,7 @@ export default function CourseSearchScreen() {
                       <Text
                         style={[styles.emptyStateTitle, { color: theme.text }]}
                       >
-                        No results found for "{submittedQuery}"
+                        No results for "{submittedQuery}"
                       </Text>
                       <Text
                         style={[
@@ -295,7 +250,7 @@ export default function CourseSearchScreen() {
                           { color: theme.textSecondary },
                         ]}
                       >
-                        Try searching for:
+                        Try different keywords, check your spelling, or explore:
                       </Text>
                       <View style={styles.emptyStateTags}>
                         {[
@@ -655,7 +610,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     height: "100%",
     // Web only property to remove default focus ring
     outlineStyle: "none" as any,

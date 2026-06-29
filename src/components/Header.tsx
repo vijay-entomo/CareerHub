@@ -1,16 +1,19 @@
 import { useTheme } from "@/hooks/use-theme";
+import { useCommonStyles } from "@/hooks/use-common-styles";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
+import { ChevronLeft } from "lucide-react-native";
 import React from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
   interpolate,
+  interpolateColor,
   SharedValue,
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,8 +21,9 @@ const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
 export const GlassIconButton = ({ children, onPress, style, scrollY }: any) => {
   const theme = useTheme();
-  const styles = createStyles(theme);
-  const scale = useSharedValue(1);
+  const commonStyles = useCommonStyles();
+  const styles = createStyles(theme, commonStyles);
+  const opacity = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => {
     const size = scrollY
@@ -28,20 +32,28 @@ export const GlassIconButton = ({ children, onPress, style, scrollY }: any) => {
     return {
       width: size,
       height: size,
-      transform: [{ scale: scale.value }],
+      opacity: opacity.value,
     };
   });
 
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => (scale.value = withSpring(1.15, { damping: 15 }))}
-      onPressOut={() =>
-        (scale.value = withSpring(1, { damping: 15, stiffness: 200 }))
-      }
+      onPressIn={() => (opacity.value = 0.4)} // Instant dim on press
+      onPressOut={() => (opacity.value = withTiming(1, { duration: 150 }))} // Smooth fade back
     >
       <Animated.View style={[styles.glassIconBase, style, animatedStyle]}>
-        <View style={styles.glassIconInner}>{children}</View>
+        {Platform.OS === "web" ? (
+          <View style={styles.glassIconInner}>{children}</View>
+        ) : (
+          <BlurView
+            intensity={50}
+            tint={theme.mode === "dark" ? "dark" : "light"}
+            style={styles.glassIconInner}
+          >
+            {children}
+          </BlurView>
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -54,6 +66,8 @@ export const Header = ({
   rightComponent,
   scrollY,
   customTitleComponent,
+  onBack,
+  solidBackgroundColor,
 }: {
   title: string;
   showBack?: boolean;
@@ -61,9 +75,12 @@ export const Header = ({
   rightComponent?: React.ReactNode;
   scrollY?: SharedValue<number>;
   customTitleComponent?: React.ReactNode;
+  onBack?: () => void;
+  solidBackgroundColor?: string;
 }) => {
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const commonStyles = useCommonStyles();
+  const styles = createStyles(theme, commonStyles);
   const router = useRouter();
 
   const defaultScrollY = useSharedValue(0);
@@ -107,15 +124,17 @@ export const Header = ({
       opacity: interpolate(activeScrollY.value, [0, 15], [0, 1], "clamp"),
       // @ts-ignore - Pure CSS blur for web
       backdropFilter: Platform.OS === "web" ? `blur(${webBlur}px)` : undefined,
-      backgroundColor:
-        theme.mode === "dark"
+      backgroundColor: solidBackgroundColor
+        ? interpolateColor(activeScrollY.value, [0, 80], ["transparent", solidBackgroundColor])
+        : theme.mode === "dark"
           ? `rgba(40, 40, 40, ${interpolate(activeScrollY.value, [0, 80], [0, 0.4], "clamp")})`
           : `rgba(255, 255, 255, ${interpolate(activeScrollY.value, [0, 80], [0, 0.4], "clamp")})`,
-      borderBottomWidth: 1.5,
-      borderBottomColor:
-        theme.mode === "dark"
+      borderBottomWidth: solidBackgroundColor ? 0 : 1,
+      borderBottomColor: solidBackgroundColor 
+        ? "transparent"
+        : theme.mode === "dark"
           ? `rgba(255, 255, 255, ${interpolate(activeScrollY.value, [0, 80], [0, 0.15], "clamp")})`
-          : `rgba(0, 0, 0, ${interpolate(activeScrollY.value, [0, 80], [0, 0.05], "clamp")})`,
+          : `rgba(255, 255, 255, ${interpolate(activeScrollY.value, [0, 80], [0, 0.7], "clamp")})`,
     };
   });
 
@@ -141,10 +160,18 @@ export const Header = ({
           <View style={styles.leftSection}>
             {showBack && (
               <GlassIconButton
-                onPress={() => router.back()}
+                onPress={() => {
+                  if (onBack) {
+                    onBack();
+                  } else if (router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace('/home');
+                  }
+                }}
                 scrollY={activeScrollY}
               >
-                <ArrowLeft size={22} color={theme.text} />
+                <ChevronLeft size={24} color={theme.text} />
               </GlassIconButton>
             )}
             {customTitleComponent ? (
@@ -169,7 +196,7 @@ export const Header = ({
   );
 };
 
-const createStyles = (theme: any) =>
+const createStyles = (theme: any, commonStyles: any) =>
   StyleSheet.create({
     fixedHeader: {
       position: "absolute",
@@ -205,6 +232,8 @@ const createStyles = (theme: any) =>
     glassIconBase: {
       justifyContent: "center",
       alignItems: "center",
+      borderRadius: 999,
+      backgroundColor: "transparent",
     },
     glassIconInner: {
       flex: 1,
@@ -213,13 +242,12 @@ const createStyles = (theme: any) =>
       borderRadius: 999, // Full pill/circle
       alignItems: "center",
       justifyContent: "center",
-      borderWidth: 1.5,
-      borderColor:
-        theme.mode === "dark"
-          ? "rgba(255, 255, 255, 0.15)"
-          : "rgba(0, 0, 0, 0.05)",
+      
+      // 3D Glass Highlight Border (Brighter on top/left, subtle on bottom/right)
+      ...commonStyles.liquidGlassBorder,
+      
       backgroundColor:
-        theme.mode === "dark" ? "rgba(40, 40, 40, 0.5)" : "transparent",
+        theme.mode === "dark" ? "rgba(0, 0, 0, 0.2)" : "rgba(255, 255, 255, 0.25)",
       overflow: "hidden",
     },
   });

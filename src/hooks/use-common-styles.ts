@@ -46,5 +46,25 @@ export function useCommonStyles() {
       // @ts-ignore
       borderCurve: "continuous",
     },
+    liquidGlassBorder: {
+      borderWidth: 1,
+      borderColor: "transparent",
+      // borderTopColor:
+      //   theme.mode === "dark"
+      //     ? "rgba(255, 255, 255, 0.1)"
+      //     : "rgba(255, 255, 255, 0.4)",
+      // borderLeftColor:
+      //   theme.mode === "dark"
+      //     ? "rgba(255, 255, 255, 0.1)"
+      //     : "rgba(255, 255, 255, 0.4)",
+      // borderBottomColor:
+      //   theme.mode === "dark"
+      //     ? "rgba(255, 255, 255, 0.05)"
+      //     : "rgba(0, 0, 0, 0.05)",
+      // borderRightColor:
+      //   theme.mode === "dark"
+      //     ? "rgba(255, 255, 255, 0.05)"
+      //     : "rgba(0, 0, 0, 0.05)",
+    },
   });
 }

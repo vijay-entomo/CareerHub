@@ -19,11 +19,15 @@ interface ToggleProps {
 export const Toggle = ({
   value,
   onValueChange,
-  activeColor = "#00C48C", // Default app accent color
-  inactiveColor = "#E5E5EA", // iOS default inactive
+  activeColor,
+  inactiveColor,
 }: ToggleProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+
+  // Use theme colors if not explicitly overridden
+  const resolvedActiveColor = activeColor || theme.primary;
+  const resolvedInactiveColor = inactiveColor || theme.backgroundSelected;
   // 1 if active, 0 if inactive
   const progress = useSharedValue(value ? 1 : 0);
 
@@ -40,7 +44,7 @@ export const Toggle = ({
     const backgroundColor = interpolateColor(
       progress.value,
       [0, 1],
-      [inactiveColor, activeColor]
+      [resolvedInactiveColor, resolvedActiveColor]
     );
     return {
       backgroundColor,
@@ -56,7 +60,12 @@ export const Toggle = ({
   });
 
   return (
-    <Pressable onPress={() => onValueChange(!value)} accessible role="switch">
+    <Pressable 
+      onPress={() => onValueChange(!value)} 
+      accessible 
+      role="switch"
+      style={styles.touchTarget}
+    >
       <Animated.View style={[styles.track, trackAnimatedStyle]}>
         <Animated.View style={[styles.thumb, thumbAnimatedStyle]} />
       </Animated.View>
@@ -65,6 +74,11 @@ export const Toggle = ({
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
+  touchTarget: {
+    minHeight: 44, // Pro-Max: Apple HIG minimum touch target
+    minWidth: 44,
+    justifyContent: "center",
+  },
   track: {
     width: 51,
     height: 31,

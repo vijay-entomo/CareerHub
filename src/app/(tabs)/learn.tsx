@@ -1,4 +1,5 @@
 import { CourseCard } from "@/components/CourseCard";
+import { AutoContrastIcon } from "@/components/AutoContrast";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
@@ -550,7 +551,10 @@ export default function Learn() {
         </Text>
 
         {/* ALL COURSES */}
-        <SectionHeader title="All Courses" />
+        <SectionHeader 
+          title="All Courses" 
+          onSeeAll={() => router.push("/all-courses")}
+        />
         <View style={{ paddingHorizontal: 20 }}>
           <AnimatedTabs
             tabs={COURSE_TABS}
@@ -591,7 +595,7 @@ export default function Learn() {
                   onPress={() => router.push("/all-courses")}
                 >
                   <View style={styles.viewAllIconWrapper}>
-                    <ArrowRight size={24} color="#000000" />
+                    <AutoContrastIcon Icon={ArrowRight} bgColor={theme.primary} size={24} />
                   </View>
                   <Text style={styles.viewAllText}>View All{'\n'}Courses</Text>
                 </Pressable>
