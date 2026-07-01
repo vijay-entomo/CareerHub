@@ -117,7 +117,7 @@ const createStyles = (theme: any) =>
       overflow: "hidden",
     },
     text: {
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
       fontSize: 18,
       color: theme.text,
       position: "absolute",

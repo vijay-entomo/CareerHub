@@ -3,27 +3,16 @@ import {
   Bookmark,
   Briefcase,
   CheckCircle2,
-  ChevronLeft,
   FileText,
   Globe,
 } from "lucide-react-native";
 import { useState } from "react";
-import {
-  Image,
-  Modal,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, Modal, StyleSheet, Text, View } from "react-native";
 import Animated, {
-  interpolate,
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
+import { Button } from "./Button";
 import { Header } from "./Header";
 
 export interface JobCardProps {
@@ -147,18 +136,20 @@ export function JobCard({
 
         {/* Footer Row */}
         <View style={styles.footerRow}>
-          <Pressable onPress={onBookmarkPress} style={styles.bookmarkBtn}>
-            <Bookmark size={24} color={theme.text} />
-          </Pressable>
-          <Pressable
+          <Button
+            variant="outline"
+            onPress={onBookmarkPress || (() => {})}
+            icon={<Bookmark size={20} color={theme.text} />}
+            style={{ paddingHorizontal: 16 }}
+          />
+          <Button
+            title="View Job"
             onPress={() => {
               setDetailsVisible(true);
               onPress?.();
             }}
-            style={styles.viewJobBtn}
-          >
-            <Text style={styles.viewJobText}>View Job</Text>
-          </Pressable>
+            style={{ flex: 1 }}
+          />
         </View>
       </View>
 
@@ -268,12 +259,13 @@ export function JobCard({
 
           {/* Sticky Bottom Bar */}
           <View style={styles.stickyBottomBar}>
-            <TouchableOpacity style={styles.bottomBookmarkBtn}>
-              <Bookmark size={24} color={theme.text} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.applyBtn}>
-              <Text style={styles.applyBtnText}>Apply Job</Text>
-            </TouchableOpacity>
+            <Button
+              variant="outline"
+              onPress={() => {}}
+              icon={<Bookmark size={20} color={theme.text} />}
+              style={{ paddingHorizontal: 16 }}
+            />
+            <Button title="Apply Job" onPress={() => {}} style={{ flex: 1 }} />
           </View>
         </View>
       </Modal>
@@ -395,6 +387,7 @@ const createStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+      gap: 16,
     },
     bookmarkBtn: {
       width: 48,
@@ -449,7 +442,7 @@ const createStyles = (theme: any) =>
     },
     modalLogoWrapper: {
       alignSelf: "center",
-      marginTop: -40, // overlap the purple header 
+      marginTop: -40, // overlap the purple header
       width: 80,
       height: 80,
       borderRadius: 40,
@@ -568,13 +561,15 @@ const createStyles = (theme: any) =>
       alignItems: "center",
       gap: 16,
       borderTopWidth: 1,
-      borderTopColor: theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+      borderTopColor:
+        theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     },
     bottomBookmarkBtn: {
       width: 56,
       height: 56,
       borderRadius: 28,
-      backgroundColor: theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "#F0F0F0",
+      backgroundColor:
+        theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "#F0F0F0",
       justifyContent: "center",
       alignItems: "center",
     },

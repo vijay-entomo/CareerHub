@@ -1,27 +1,30 @@
 import { AppFonts } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import { useRouter } from "expo-router";
 import { MotiView } from "moti";
 import { useState } from "react";
 import {
-  Dimensions,
   Image,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
+import Animated, {
+  interpolate,
+  runOnJS,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, runOnJS } from "react-native-reanimated";
 import { SwipeButton } from "../components/SwipeButton";
-
-const { width } = Dimensions.get("window");
 
 const FloatingBadge = ({
   label,
@@ -46,16 +49,22 @@ const FloatingBadge = ({
   delay: number;
   isVisible?: boolean;
 }) => {
-  const styles = createStyles();
+  const { width } = useWindowDimensions();
+  const theme = useTheme();
+  const styles = createStyles(width, theme);
   return (
     <MotiView
-      animate={{ 
-        opacity: isVisible ? 1 : 0, 
-        scale: isVisible ? 1 : 0.9, 
+      animate={{
+        opacity: isVisible ? 1 : 0,
+        scale: isVisible ? 1 : 0.9,
         translateY: isVisible ? 0 : 15,
-        rotate: isVisible ? rotate : "0deg" 
+        rotate: isVisible ? rotate : "0deg",
       }}
-      transition={{ type: "timing", duration: 400, delay: isVisible ? delay / 2 : 0 }}
+      transition={{
+        type: "timing",
+        duration: 400,
+        delay: isVisible ? delay / 2 : 0,
+      }}
       style={[
         styles.badgeContainer,
         {
@@ -73,7 +82,9 @@ const FloatingBadge = ({
 };
 
 export default function Index() {
-  const styles = createStyles();
+  const { width } = useWindowDimensions();
+  const theme = useTheme();
+  const styles = createStyles(width, theme);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -92,17 +103,32 @@ export default function Index() {
   });
 
   const blob1Style = useAnimatedStyle(() => {
-    const rotate = interpolate(scrollX.value, [0, width, width * 2], [60, 0, -60], "clamp");
+    const rotate = interpolate(
+      scrollX.value,
+      [0, width, width * 2],
+      [60, 0, -60],
+      "clamp",
+    );
     return { transform: [{ rotate: `${rotate}deg` }] };
   });
 
   const blob2Style = useAnimatedStyle(() => {
-    const rotate = interpolate(scrollX.value, [width, width * 2, width * 3], [60, 0, -60], "clamp");
+    const rotate = interpolate(
+      scrollX.value,
+      [width, width * 2, width * 3],
+      [60, 0, -60],
+      "clamp",
+    );
     return { transform: [{ rotate: `${rotate}deg` }] };
   });
 
   const blob3Style = useAnimatedStyle(() => {
-    const rotate = interpolate(scrollX.value, [width * 2, width * 3, width * 4], [60, 0, -60], "clamp");
+    const rotate = interpolate(
+      scrollX.value,
+      [width * 2, width * 3, width * 4],
+      [60, 0, -60],
+      "clamp",
+    );
     return { transform: [{ rotate: `${rotate}deg` }] };
   });
 
@@ -112,7 +138,7 @@ export default function Index() {
       <MotiView
         style={StyleSheet.absoluteFillObject}
         animate={{
-          backgroundColor: activeIndex === 0 ? "#7C5DF9" : "#000000",
+          backgroundColor: activeIndex === 0 ? "#7C5DF9" : "#0F0F0F",
         }}
         transition={{ type: "timing", duration: 400 }}
       />
@@ -227,7 +253,6 @@ export default function Index() {
                         style={{
                           fontSize: 90,
                           color: "#F785C0",
-                          fontWeight: "100",
                         }}
                       >
                         ✿
@@ -274,7 +299,6 @@ export default function Index() {
                         style={{
                           fontSize: 80,
                           color: "#D7FE03",
-                          fontWeight: "200",
                         }}
                       >
                         ✴
@@ -356,7 +380,12 @@ export default function Index() {
                 <MotiView
                   from={{ opacity: 0, scale: 0.5, translateY: 20 }}
                   animate={{ opacity: 1, scale: 1, translateY: 0 }}
-                  transition={{ delay: 100, type: "spring", damping: 20, stiffness: 90 }}
+                  transition={{
+                    delay: 100,
+                    type: "spring",
+                    damping: 20,
+                    stiffness: 90,
+                  }}
                 >
                   <Animated.View style={blob1Style}>
                     <Image
@@ -427,7 +456,12 @@ export default function Index() {
                 <MotiView
                   from={{ opacity: 0, scale: 0.5, translateY: 20 }}
                   animate={{ opacity: 1, scale: 1, translateY: 0 }}
-                  transition={{ delay: 100, type: "spring", damping: 20, stiffness: 90 }}
+                  transition={{
+                    delay: 100,
+                    type: "spring",
+                    damping: 20,
+                    stiffness: 90,
+                  }}
                 >
                   <Animated.View style={blob2Style}>
                     <Image
@@ -497,7 +531,12 @@ export default function Index() {
                 <MotiView
                   from={{ opacity: 0, scale: 0.5, translateY: 20 }}
                   animate={{ opacity: 1, scale: 1, translateY: 0 }}
-                  transition={{ delay: 100, type: "spring", damping: 20, stiffness: 90 }}
+                  transition={{
+                    delay: 100,
+                    type: "spring",
+                    damping: 20,
+                    stiffness: 90,
+                  }}
                 >
                   <Animated.View style={blob3Style}>
                     <Image
@@ -559,28 +598,30 @@ export default function Index() {
 
         {/* FIXED BOTTOM CONTROLS */}
         <View style={styles.fixedBottomContainer}>
-          <SwipeButton
-            title="Swipe to Start"
-            onComplete={() => router.push("/login")}
-          />
-          <View style={styles.signupContainer}>
-            <Text
-              style={[
-                styles.signupText,
-                { color: activeIndex === 0 ? "#FFFFFF" : "#FFF" },
-              ]}
-            >
-              New to the platform?{" "}
+          <View style={styles.bottomContentWrapper}>
+            <SwipeButton
+              title="Swipe to Start"
+              onComplete={() => router.push("/login")}
+            />
+            <View style={styles.signupContainer}>
               <Text
                 style={[
-                  styles.signupLink,
+                  styles.signupText,
                   { color: activeIndex === 0 ? "#FFFFFF" : "#FFF" },
                 ]}
-                onPress={() => router.push("/signup")}
               >
-                Create an account
+                New to the platform?{" "}
+                <Text
+                  style={[
+                    styles.signupLink,
+                    { color: activeIndex === 0 ? "#FFFFFF" : "#FFF" },
+                  ]}
+                  onPress={() => router.push("/signup")}
+                >
+                  Create an account
+                </Text>
               </Text>
-            </Text>
+            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -588,7 +629,7 @@ export default function Index() {
   );
 }
 
-const createStyles = () =>
+const createStyles = (width: number, theme: any) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -608,16 +649,18 @@ const createStyles = () =>
     textStack: {
       position: "relative",
       width: "100%",
+      maxWidth: 420, // Constrains brutalist typography block to maintain its shape
+      alignSelf: "center",
     },
     hugeText: {
       fontSize: 84,
-      fontFamily: AppFonts.urbanist.black,
+      fontFamily: theme.fonts.black,
       color: "#FFFFFF",
       lineHeight: 78,
       letterSpacing: 1,
     },
     darkText: {
-      color: "#000000",
+      color: "#0F0F0F",
     },
     highlightWrapper: {
       position: "relative",
@@ -647,7 +690,7 @@ const createStyles = () =>
       elevation: 5,
     },
     badgeText: {
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
       fontSize: 14,
     },
     decoration: {
@@ -659,9 +702,14 @@ const createStyles = () =>
       bottom: 0,
       left: 0,
       right: 0,
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingBottom: 24, // extra padding for safe area
       paddingTop: 20,
+    },
+    bottomContentWrapper: {
+      width: "100%",
+      maxWidth: 400,
     },
     signupContainer: {
       marginTop: 20,
@@ -669,11 +717,11 @@ const createStyles = () =>
     },
     signupText: {
       fontSize: 15,
-      fontFamily: AppFonts.urbanist.medium,
+      fontFamily: theme.fonts.medium,
       color: "#FFFFFF",
     },
     signupLink: {
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
       textDecorationLine: "underline",
     },
     paginationContainer: {
@@ -701,6 +749,9 @@ const createStyles = () =>
       paddingHorizontal: 24,
       paddingTop: 80,
       paddingBottom: 160,
+      width: "100%",
+      maxWidth: 500,
+      alignSelf: "center",
     },
     blobArea: {
       flex: 1,
@@ -712,7 +763,7 @@ const createStyles = () =>
       position: "absolute",
       color: "#FFFFFF",
       fontSize: 24,
-      fontFamily: AppFonts.urbanist.black,
+      fontFamily: theme.fonts.black,
     },
     textSection: {
       alignItems: "center",
@@ -720,7 +771,7 @@ const createStyles = () =>
     },
     newHeading: {
       fontSize: 36,
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
       color: "#FFFFFF",
     },
     newHeadingRow: {
@@ -736,7 +787,7 @@ const createStyles = () =>
     },
     newSubtitle: {
       fontSize: 14,
-      fontFamily: AppFonts.urbanist.regular,
+      fontFamily: theme.fonts.regular,
       color: "#A0A0A0",
       textAlign: "center",
       lineHeight: 22,

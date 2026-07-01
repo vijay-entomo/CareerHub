@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '@/hooks/use-theme';
 import { useFonts, Urbanist_400Regular, Urbanist_500Medium, Urbanist_600SemiBold, Urbanist_700Bold, Urbanist_900Black } from '@expo-google-fonts/urbanist';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_900Black } from '@expo-google-fonts/inter';
@@ -8,6 +9,7 @@ import { Text, TextInput, LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 import { AppFonts } from '@/constants/theme';
+import '@/i18n'; // Initialize i18n
 
 // Ignore specific deprecation warnings originating from animation libraries
 LogBox.ignoreLogs([
@@ -38,6 +40,7 @@ function RootNavigator() {
   
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <StatusBar style={theme.mode === "dark" ? "light" : "dark"} />
       <Stack 
         screenOptions={{ 
           headerShown: false,

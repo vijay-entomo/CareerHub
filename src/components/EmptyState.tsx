@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ViewStyle, StyleProp } from 'react-n
 import { useTheme } from '@/hooks/use-theme';
 import { BorderRadius } from '@/constants/theme';
 import { Plus } from 'lucide-react-native';
+import { Button } from './Button';
 
 interface EmptyStateProps {
   icon: any;
@@ -25,10 +26,11 @@ export function EmptyState({ icon: Icon, title, subtitle, buttonText, onAdd, sty
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
 
-      <Pressable style={styles.addButton} onPress={onAdd}>
-        <Plus size={20} color={theme.primaryForeground} style={{ marginRight: 6 }} />
-        <Text style={styles.addButtonText}>{buttonText}</Text>
-      </Pressable>
+      <Button
+        title={buttonText}
+        icon={<Plus size={20} color={theme.primaryForeground} />}
+        onPress={onAdd}
+      />
     </View>
   );
 }

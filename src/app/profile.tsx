@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import {
+  CheckCircle2,
   ChevronRight,
   Edit2,
   HelpCircle,
@@ -11,7 +12,9 @@ import {
   SlidersHorizontal,
   User,
 } from "lucide-react-native";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { MotiView } from "moti";
+import { useState } from "react";
+import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
@@ -19,8 +22,10 @@ import Animated, {
 
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
+import { useTranslation } from "react-i18next";
 import { Header } from "../components/Header";
 import { Toggle } from "../components/Toggle";
+import { Button } from "../components/Button";
 
 export default function ProfileSettings() {
   const theme = useTheme();
@@ -29,6 +34,12 @@ export default function ProfileSettings() {
   const router = useRouter();
 
   const scrollY = useSharedValue(0);
+  const { i18n } = useTranslation();
+
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
+  const [currentLang, setCurrentLang] = useState(
+    i18n.language?.startsWith("tl") ? "tl" : "en",
+  );
 
   const handleVerticalScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -56,20 +67,13 @@ export default function ProfileSettings() {
           <Text style={styles.profileNameLarge}>Brittni Lando</Text>
           <Text style={styles.profileEmail}>brittnilonda5487@gmail.com</Text>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.editProfileButton,
-              pressed && { opacity: 0.8 },
-            ]}
+          <Button
+            title="Edit Profile"
+            variant="secondary"
+            size="small"
             onPress={() => router.push("/edit-profile")}
-          >
-            <Edit2
-              size={16}
-              color={theme.background}
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.editProfileText}>Edit Profile</Text>
-          </Pressable>
+            icon={<Edit2 size={16} color={theme.background} />}
+          />
         </View>
 
         {/* Settings Section 1 */}
@@ -108,6 +112,7 @@ export default function ProfileSettings() {
         <Text style={styles.sectionTitle}>PREFERENCE</Text>
         <View style={styles.section}>
           <Pressable
+            onPress={() => setIsLanguageModalVisible(true)}
             style={({ pressed }) => [
               styles.settingRow,
               pressed && { backgroundColor: "rgba(150,150,150,0.1)" },
@@ -117,19 +122,40 @@ export default function ProfileSettings() {
               <Languages size={20} color={theme.textSecondary} />
               <Text style={styles.settingText}>Language</Text>
             </View>
-            <ChevronRight size={20} color={theme.textSecondary} />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text
+                style={{
+                  fontFamily: theme.fonts.medium,
+                  color: theme.textSecondary,
+                  marginRight: 8,
+                  fontSize: 14,
+                }}
+              >
+                {currentLang === "en" ? "English" : "Filipino"}
+              </Text>
+              <ChevronRight size={20} color={theme.textSecondary} />
+            </View>
           </Pressable>
           <View style={styles.divider} />
-          <View style={styles.settingRow}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingRow,
+              { paddingVertical: 6, minHeight: 56 }, // offset Toggle's 44 minHeight
+              pressed && { backgroundColor: "rgba(150,150,150,0.1)" },
+            ]}
+            onPress={() => theme.setTheme(theme.mode === "dark" ? "light" : "dark")}
+          >
             <View style={styles.settingLeft}>
               <Moon size={20} color={theme.textSecondary} />
               <Text style={styles.settingText}>Dark Mode</Text>
             </View>
-            <Toggle
-              value={theme.mode === "dark"}
-              onValueChange={(val) => theme.setTheme(val ? "dark" : "light")}
-            />
-          </View>
+            <View pointerEvents="none">
+              <Toggle
+                value={theme.mode === "dark"}
+                onValueChange={() => {}}
+              />
+            </View>
+          </Pressable>
         </View>
 
         {/* Settings Section 3 */}
@@ -176,22 +202,158 @@ export default function ProfileSettings() {
         </View>
 
         {/* Logout Button */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.logoutButton,
-            pressed && { backgroundColor: "rgba(150,150,150,0.1)" },
-          ]}
+        <Button
+          title="Log Out"
+          variant="ghost"
+          fullWidth
           onPress={() => router.replace("/login")}
-        >
-          <LogOut size={20} color="#FF3B30" />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </Pressable>
+          icon={<LogOut size={20} color="#FF3B30" />}
+          textStyle={{ color: "#FF3B30" }}
+          style={{ backgroundColor: theme.backgroundElement, marginTop: 8 }}
+        />
 
         {/* Version Details */}
         <View style={styles.versionContainer}>
           <Text style={styles.versionText}>Version 1.0.0 (Build 1)</Text>
         </View>
       </Animated.ScrollView>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={isLanguageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsLanguageModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setIsLanguageModalVisible(false)}
+          />
+          <MotiView
+            from={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", damping: 20, stiffness: 200 }}
+            style={{
+              width: "85%",
+              backgroundColor: theme.mode === "dark" ? "#1E1E1E" : "#F8F8F8",
+              borderRadius: 24,
+              overflow: "hidden",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.2,
+              shadowRadius: 20,
+              elevation: 10,
+            }}
+          >
+            <View style={{ padding: 20, alignItems: "center" }}>
+              <Text
+                style={{
+                  fontFamily: theme.fonts.semiBold,
+                  fontSize: 17,
+                  color: theme.text,
+                }}
+              >
+                Select Language
+              </Text>
+            </View>
+
+            {[
+              { id: "en", label: "English", active: true },
+              { id: "tl", label: "Filipino", active: true },
+              { id: "es", label: "Spanish", active: false },
+              { id: "fr", label: "French", active: false },
+              { id: "de", label: "German", active: false },
+              { id: "ja", label: "Japanese", active: false },
+            ].map((lang) => {
+              const isSelected = currentLang === lang.id;
+              return (
+                <Pressable
+                  key={lang.id}
+                  disabled={!lang.active}
+                  onPress={() => {
+                    setCurrentLang(lang.id);
+                    i18n.changeLanguage(lang.id);
+                    // Add a tiny delay so the user sees the checkmark appear before modal closes
+                    setTimeout(() => setIsLanguageModalVisible(false), 200);
+                  }}
+                  style={({ pressed }) => [
+                    {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      paddingVertical: 16,
+                      paddingHorizontal: 20,
+                      borderTopWidth: StyleSheet.hairlineWidth,
+                      borderTopColor:
+                        theme.mode === "dark"
+                          ? "rgba(255,255,255,0.15)"
+                          : "rgba(0,0,0,0.15)",
+                      backgroundColor:
+                        pressed && lang.active
+                          ? theme.mode === "dark"
+                            ? "rgba(255,255,255,0.05)"
+                            : "rgba(0,0,0,0.05)"
+                          : "transparent",
+                    },
+                  ]}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text
+                      style={{
+                        fontFamily: isSelected
+                          ? theme.fonts.semiBold
+                          : theme.fonts.regular,
+                        fontSize: 17,
+                        color: !lang.active
+                          ? theme.textSecondary
+                          : isSelected
+                            ? "#007AFF"
+                            : theme.text,
+                      }}
+                    >
+                      {lang.label}
+                    </Text>
+                    {!lang.active && (
+                      <View
+                        style={{
+                          backgroundColor:
+                            theme.mode === "dark"
+                              ? "rgba(255,255,255,0.1)"
+                              : "rgba(0,0,0,0.05)",
+                          paddingHorizontal: 6,
+                          paddingVertical: 2,
+                          borderRadius: 4,
+                          marginLeft: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: theme.fonts.medium,
+                            fontSize: 10,
+                            color: theme.textSecondary,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          Coming Soon
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  {isSelected && <CheckCircle2 size={20} color="#007AFF" />}
+                </Pressable>
+              );
+            })}
+          </MotiView>
+        </View>
+      </Modal>
     </View>
   );
 }

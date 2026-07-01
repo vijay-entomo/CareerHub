@@ -35,6 +35,9 @@ const oldPath = path.join(__dirname, "../dist/_expo");
 const newPath = path.join(__dirname, "../dist/expo");
 
 if (fs.existsSync(oldPath)) {
+  if (fs.existsSync(newPath)) {
+    fs.rmSync(newPath, { recursive: true, force: true });
+  }
   fs.renameSync(oldPath, newPath);
   console.log("Renamed dist/_expo to dist/expo");
 }

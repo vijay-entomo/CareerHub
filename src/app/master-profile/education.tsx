@@ -1,14 +1,14 @@
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
-import { FormActionRow } from "@/components/FormActionRow";
 import { EmptyState } from "@/components/EmptyState";
+import { FormActionRow } from "@/components/FormActionRow";
+import { Header } from "@/components/Header";
 import { Input } from "@/components/Input";
 import { BorderRadius } from "@/constants/theme";
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import {
   Calendar,
-  Check,
   ChevronDown,
   ChevronUp,
   GraduationCap,
@@ -16,19 +16,20 @@ import {
   Plus,
   Trash2,
 } from "lucide-react-native";
-import { AnimatePresence, MotiView } from "moti";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import Animated, {
-  FadeIn,
-  FadeOut,
   FadeInDown,
   FadeOutUp,
-  LinearTransition,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { ScrollView as GHScrollView } from "react-native-gesture-handler";
+
+const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 
 type EducationItem = {
   id: string;
@@ -142,7 +143,8 @@ const AccordionItem = ({
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Degree</Text>
                 <Text style={styles.detailValue}>
-                  {edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ""}
+                  {edu.degree}{" "}
+                  {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ""}
                 </Text>
               </View>
               <View style={styles.detailRow}>
@@ -151,7 +153,7 @@ const AccordionItem = ({
                   {edu.startDate} - {edu.current ? "Present" : edu.endDate}
                 </Text>
               </View>
-              {edu.specialization && (
+              {!!edu.specialization && (
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Specialization</Text>
                   <Text style={styles.detailValue}>{edu.specialization}</Text>
@@ -165,10 +167,19 @@ const AccordionItem = ({
   );
 };
 
-export default function Education({ onCountChange }: { onCountChange?: (count: number) => void }) {
+export default function Education({
+  onCountChange,
+}: {
+  onCountChange?: (count: number) => void;
+}) {
   const theme = useTheme();
   const commonStyles = useCommonStyles();
   const styles = createStyles(theme);
+
+  const modalScrollY = useSharedValue(0);
+  const modalScrollHandler = useAnimatedScrollHandler((event) => {
+    modalScrollY.value = event.contentOffset.y;
+  });
 
   const [educations, setEducations] = useState<EducationItem[]>([
     {
@@ -275,10 +286,6 @@ export default function Education({ onCountChange }: { onCountChange?: (count: n
 
   const renderForm = () => (
     <View style={styles.formCard}>
-      <Text style={styles.formTitle}>
-        {editingId ? "Edit Education" : "Add Education"}
-      </Text>
-
       <Input
         label="Institution Name *"
         placeholder="Ex: Harvard University"
@@ -357,61 +364,76 @@ export default function Education({ onCountChange }: { onCountChange?: (count: n
 
   return (
     <View style={styles.tabContainer}>
-      {isAdding ? (
-        <Animated.View
-          key="form"
-          layout={LinearTransition.springify().damping(18).stiffness(150)}
-          entering={FadeInDown.springify().damping(18).stiffness(150)}
-          exiting={FadeOutUp.duration(200)}
-        >
-          {renderForm()}
-        </Animated.View>
-      ) : (
-        <Animated.View
-          key="list"
-          layout={LinearTransition.springify().damping(18).stiffness(150)}
-          entering={FadeInDown.springify().damping(18).stiffness(150).delay(100)}
-          exiting={FadeOutUp.duration(200)}
-          style={styles.listContainer}
-        >
-          {educations.length === 0 ? (
-            <EmptyState
-              icon={GraduationCap}
-              title="No Education Added"
-              subtitle="Add your education to strengthen your profile."
-              buttonText="Add Education"
-              onAdd={() => setIsAdding(true)}
-            />
-          ) : (
-            <>
-              {educations.map((edu) => (
-                <AccordionItem
-                  key={edu.id}
-                  edu={edu}
-                  isExpanded={expandedId === edu.id}
-                  onToggle={() => toggleExpand(edu.id)}
-                  onDelete={() => handleDelete(edu.id)}
-                  onEdit={() => handleEdit(edu.id)}
-                  theme={theme}
-                  styles={styles}
-                />
-              ))}
+      <Animated.View
+        key="list"
+        entering={FadeInDown.springify().damping(18).stiffness(150)}
+        exiting={FadeOutUp.duration(200)}
+      >
+        {educations.length === 0 ? (
+          <EmptyState
+            icon={GraduationCap}
+            title="No Education Added"
+            subtitle="Add your education to strengthen your profile."
+            buttonText="Add Education"
+            onAdd={() => setIsAdding(true)}
+          />
+        ) : (
+          <>
+            {educations.map((edu) => (
+              <AccordionItem
+                key={edu.id}
+                edu={edu}
+                isExpanded={expandedId === edu.id}
+                onToggle={() => toggleExpand(edu.id)}
+                onDelete={() => handleDelete(edu.id)}
+                onEdit={() => handleEdit(edu.id)}
+                theme={theme}
+                styles={styles}
+              />
+            ))}
 
-              <Pressable
-                style={styles.addMoreButton}
-                onPress={() => setIsAdding(true)}
-              >
-                <Plus
-                  size={20}
-                  color={theme.text}
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.addMoreText}>Add Education</Text>
-              </Pressable>
-            </>
-          )}
-        </Animated.View>
-      )}
+            <Button
+              title="Add Education"
+              variant="outline"
+              icon={<Plus size={20} color={theme.text} />}
+              onPress={() => setIsAdding(true)}
+              style={{ marginTop: 8 }}
+            />
+          </>
+        )}
+      </Animated.View>
+
+      <Modal
+        visible={isAdding}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setIsAdding(false);
+          resetForm();
+        }}
+      >
+        <View
+          style={[styles.modalContainer, { backgroundColor: theme.background }]}
+        >
+          <Header
+            title={editingId ? "Edit Education" : "Add Education"}
+            showBack
+            scrollY={modalScrollY}
+            onBack={() => {
+              setIsAdding(false);
+              resetForm();
+            }}
+          />
+          <AnimatedGHScrollView
+            showsVerticalScrollIndicator={false}
+            onScroll={modalScrollHandler}
+            scrollEventThrottle={16}
+            contentContainerStyle={styles.modalScrollContent}
+          >
+            {renderForm()}
+          </AnimatedGHScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -421,6 +443,14 @@ const createStyles = (theme: any) =>
     tabContainer: {},
 
     // Form Styles
+    modalContainer: {
+      flex: 1,
+    },
+    modalScrollContent: {
+      paddingHorizontal: 20,
+      paddingTop: 100, // Space for Header
+      paddingBottom: 40,
+    },
     formCard: {
       backgroundColor: theme.backgroundElement,
       borderRadius: BorderRadius.card,
@@ -428,12 +458,7 @@ const createStyles = (theme: any) =>
       borderWidth: 1,
       borderColor: theme.backgroundSelected,
     },
-    formTitle: {
-      fontSize: 20,
-      fontFamily: theme.fonts.bold,
-      color: theme.text,
-      marginBottom: 20,
-    },
+
     row: {
       flexDirection: "row",
     },

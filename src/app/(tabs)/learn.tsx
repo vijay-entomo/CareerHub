@@ -1,11 +1,13 @@
-import { CourseCard } from "@/components/CourseCard";
 import { AutoContrastIcon } from "@/components/AutoContrast";
+import { CourseCard } from "@/components/CourseCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import {
+  ArrowRight,
+  Bookmark,
   Briefcase,
   Camera,
   Code2,
@@ -21,7 +23,6 @@ import {
   Sparkles,
   Star,
   Target,
-  ArrowRight,
 } from "lucide-react-native";
 import { useRef, useState } from "react";
 import {
@@ -35,6 +36,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Button } from "@/components/Button";
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -371,6 +373,7 @@ export default function Learn() {
     { id: "Trending", label: "Trending", icon: Flame },
     { id: "Recommended", label: "Recommended", icon: Target },
     { id: "New Addition", label: "New Addition", icon: Sparkles },
+    { id: "Bookmarked", label: "Bookmarked", icon: Bookmark },
   ];
   const [activeCourseTab, setActiveCourseTab] = useState(COURSE_TABS[0].id);
 
@@ -389,8 +392,6 @@ export default function Learn() {
       setActiveHeroIndex(index);
     }
   };
-
-
 
   return (
     <View style={commonStyles.container}>
@@ -513,9 +514,11 @@ export default function Learn() {
                   </View>
                   <Text style={styles.heroTitle}>{course.title}</Text>
                   <View style={styles.heroActionRow}>
-                    <Pressable style={styles.heroPlayButton}>
-                      <Text style={styles.heroPlayText}>View Course</Text>
-                    </Pressable>
+                    <Button
+                      title="View Course"
+                      variant="secondary"
+                      onPress={() => {}}
+                    />
                   </View>
                 </View>
               </View>
@@ -535,160 +538,172 @@ export default function Learn() {
           </View>
         </View>
 
-        {/* CONTINUE LEARNING ROW */}
-        <SectionHeader
-          title="Continue Learning"
-          onSeeAll={() => router.push("/my-courses")}
-        />
-        <ContinueLearningDeck
-          courses={RECOMMENDED_COURSES}
-          theme={theme}
-          styles={styles}
-        />
-
-        <Text style={[styles.compactEncourageMessage]}>
-          You're on a roll! Finish this course today to keep moving forward.
-        </Text>
-
-        {/* ALL COURSES */}
-        <SectionHeader 
-          title="All Courses" 
-          onSeeAll={() => router.push("/all-courses")}
-        />
         <View style={{ paddingHorizontal: 20 }}>
+          {/* CONTINUE LEARNING ROW */}
+          <SectionHeader
+            title="Continue Learning"
+            onSeeAll={() => router.push("/my-courses")}
+          />
+          <ContinueLearningDeck
+            courses={RECOMMENDED_COURSES}
+            theme={theme}
+            styles={styles}
+          />
+
+          <Text style={[styles.compactEncourageMessage]}>
+            You're on a roll! Finish this course today to keep moving forward.
+          </Text>
+
+          {/* ALL COURSES */}
+          <SectionHeader
+            title="All Courses"
+            onSeeAll={() => router.push("/all-courses")}
+          />
           <AnimatedTabs
             tabs={COURSE_TABS}
             activeTab={activeCourseTab}
             onTabChange={setActiveCourseTab}
           />
-        </View>
 
-        <Animated.ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.horizontalScroll, { alignItems: "stretch" }]}
-          decelerationRate="fast"
-          snapToInterval={300 + 16}
-        >
-          {(() => {
-            const list =
-              activeCourseTab === "Recommended"
-                ? RECOMMENDED_COURSES
-                : activeCourseTab === "New Addition"
-                  ? [...RECOMMENDED_COURSES].slice(1, 4)
-                  : [...RECOMMENDED_COURSES].reverse();
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[
+              styles.horizontalScroll,
+              { alignItems: "stretch" },
+            ]}
+            decelerationRate="fast"
+            snapToInterval={300 + 16}
+          >
+            {(() => {
+              const list =
+                activeCourseTab === "Recommended"
+                  ? RECOMMENDED_COURSES
+                  : activeCourseTab === "New Addition"
+                    ? [...RECOMMENDED_COURSES].slice(1, 4)
+                    : [...RECOMMENDED_COURSES].reverse();
 
-            const displayList = list.slice(0, 3);
-            return (
-              <>
-                {displayList.map((course) => (
-                  <View key={course.id} style={{ width: 300, height: "100%" }}>
-                    <CourseCard
-                      course={course}
-                      layout="vertical"
-                      style={{ height: "100%" }}
+              const displayList = list.slice(0, 3);
+              return (
+                <>
+                  {displayList.map((course) => (
+                    <View
+                      key={course.id}
+                      style={{ width: 300, height: "100%" }}
+                    >
+                      <CourseCard
+                        course={course}
+                        layout="vertical"
+                        style={{ height: "100%" }}
+                      />
+                    </View>
+                  ))}
+                  <Pressable
+                    style={styles.viewAllCard}
+                    onPress={() => router.push("/all-courses")}
+                  >
+                    <View style={styles.viewAllIconWrapper}>
+                      <AutoContrastIcon
+                        Icon={ArrowRight}
+                        bgColor={theme.primary}
+                        size={24}
+                      />
+                    </View>
+                    <Text style={styles.viewAllText}>
+                      View All{"\n"}Courses
+                    </Text>
+                  </Pressable>
+                </>
+              );
+            })()}
+          </Animated.ScrollView>
+
+          {/* EXPLORE TOPICS */}
+          <SectionHeader title="Explore Topics" />
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.horizontalScroll]}
+          >
+            {COURSE_CATEGORIES.map((cat, idx) => {
+              const Icon = cat.icon;
+              return (
+                <Pressable
+                  key={cat.id}
+                  style={({ pressed }) => [
+                    styles.categoryBentoTile,
+                    {
+                      backgroundColor:
+                        theme.mode === "dark"
+                          ? `${cat.color}15`
+                          : `${cat.color}10`,
+                      borderColor:
+                        theme.mode === "dark"
+                          ? `${cat.color}30`
+                          : `${cat.color}20`,
+                      transform: [{ scale: pressed ? 0.96 : 1 }],
+                    },
+                  ]}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/category/[id]",
+                      params: { id: cat.id },
+                    } as any)
+                  }
+                >
+                  <View
+                    style={[
+                      styles.categoryBentoIconWrapper,
+                      { backgroundColor: `${cat.color}25` },
+                    ]}
+                  >
+                    <Icon
+                      size={20}
+                      color={theme.mode === "dark" ? cat.color : theme.text}
                     />
                   </View>
-                ))}
-                <Pressable
-                  style={styles.viewAllCard}
-                  onPress={() => router.push("/all-courses")}
-                >
-                  <View style={styles.viewAllIconWrapper}>
-                    <AutoContrastIcon Icon={ArrowRight} bgColor={theme.primary} size={24} />
-                  </View>
-                  <Text style={styles.viewAllText}>View All{'\n'}Courses</Text>
+                  <Text style={styles.categoryBentoText}>{cat.label}</Text>
                 </Pressable>
-              </>
-            );
-          })()}
-        </Animated.ScrollView>
+              );
+            })}
+          </Animated.ScrollView>
 
-        {/* EXPLORE TOPICS */}
-        <SectionHeader title="Explore Topics" />
-        <Animated.ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.horizontalScroll]}
-        >
-          {COURSE_CATEGORIES.map((cat, idx) => {
-            const Icon = cat.icon;
-            return (
-              <Pressable
-                key={cat.id}
-                style={({ pressed }) => [
-                  styles.categoryBentoTile,
-                  {
-                    backgroundColor:
-                      theme.mode === "dark"
-                        ? `${cat.color}15`
-                        : `${cat.color}10`,
-                    borderColor:
-                      theme.mode === "dark"
-                        ? `${cat.color}30`
-                        : `${cat.color}20`,
-                    transform: [{ scale: pressed ? 0.96 : 1 }],
-                  },
-                ]}
-                onPress={() =>
-                  router.push({
-                    pathname: "/category/[id]",
-                    params: { id: cat.id },
-                  } as any)
-                }
-              >
-                <View
-                  style={[
-                    styles.categoryBentoIconWrapper,
-                    { backgroundColor: `${cat.color}25` },
-                  ]}
-                >
-                  <Icon
-                    size={20}
-                    color={theme.mode === "dark" ? cat.color : theme.text}
+          {/* TOP MENTORS */}
+          <SectionHeader title="Top Mentors" onSeeAll={() => {}} />
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScroll}
+          >
+            {TOP_MENTORS.map((mentor) => (
+              <View key={mentor.id} style={styles.mentorCard}>
+                <View style={styles.mentorAvatarWrapper}>
+                  <Image
+                    source={{ uri: mentor.avatar }}
+                    style={styles.mentorAvatar}
                   />
+                  <View style={styles.mentorOnlineBadge} />
                 </View>
-                <Text style={styles.categoryBentoText}>{cat.label}</Text>
-              </Pressable>
-            );
-          })}
-        </Animated.ScrollView>
+                <Text style={styles.mentorName} numberOfLines={1}>
+                  {mentor.name}
+                </Text>
+                <Text style={styles.mentorRole} numberOfLines={1}>
+                  {mentor.role}
+                </Text>
 
-        {/* TOP MENTORS */}
-        <SectionHeader title="Top Mentors" onSeeAll={() => {}} />
-        <Animated.ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalScroll}
-        >
-          {TOP_MENTORS.map((mentor) => (
-            <View key={mentor.id} style={styles.mentorCard}>
-              <View style={styles.mentorAvatarWrapper}>
-                <Image
-                  source={{ uri: mentor.avatar }}
-                  style={styles.mentorAvatar}
-                />
-                <View style={styles.mentorOnlineBadge} />
-              </View>
-              <Text style={styles.mentorName} numberOfLines={1}>
-                {mentor.name}
-              </Text>
-              <Text style={styles.mentorRole} numberOfLines={1}>
-                {mentor.role}
-              </Text>
-
-              <View style={styles.mentorActions}>
-                <View style={styles.mentorRating}>
-                  <Star size={12} color="#FFC107" fill="#FFC107" />
-                  <Text style={styles.mentorRatingText}>{mentor.rating}</Text>
+                <View style={styles.mentorActions}>
+                  <View style={styles.mentorRating}>
+                    <Star size={12} color="#FFC107" fill="#FFC107" />
+                    <Text style={styles.mentorRatingText}>{mentor.rating}</Text>
+                  </View>
+                  <Pressable style={styles.chatButton}>
+                    <MessageCircle size={14} color={theme.background} />
+                  </Pressable>
                 </View>
-                <Pressable style={styles.chatButton}>
-                  <MessageCircle size={14} color={theme.background} />
-                </Pressable>
               </View>
-            </View>
-          ))}
-        </Animated.ScrollView>
+            ))}
+          </Animated.ScrollView>
+        </View>
       </Animated.ScrollView>
     </View>
   );
@@ -795,7 +810,7 @@ const createStyles = (theme: any) =>
       backgroundColor: theme.text,
     },
     horizontalScroll: {
-      paddingHorizontal: 20,
+      // paddingHorizontal: 20,
       gap: 16,
     },
     // MENTORS STYLES
@@ -868,7 +883,7 @@ const createStyles = (theme: any) =>
     },
     deckContainer: {
       flexDirection: "row",
-      paddingHorizontal: 20,
+      // paddingHorizontal: 20,
       marginBottom: 12,
       height: 132,
       position: "relative",
@@ -972,7 +987,7 @@ const createStyles = (theme: any) =>
       fontSize: 13,
       color: theme.textSecondary,
       marginTop: 0,
-      paddingHorizontal: 24,
+      // paddingHorizontal: 24,
       lineHeight: 18,
       textAlign: "center",
     },

@@ -17,7 +17,6 @@ import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
 import { Input } from "../components/Input";
 import { SocialAuthButton } from "../components/SocialAuthButton";
-import { BorderRadius } from "../constants/theme";
 
 export default function Login() {
   const theme = useTheme();
@@ -125,8 +124,8 @@ export default function Login() {
               <Button
                 title="Sign In"
                 onPress={handleLogin}
-                style={styles.signInButton}
-                textStyle={{ fontSize: 16 }}
+                variant="contrast"
+                shape="square"
               />
 
               <View style={styles.dividerRow}>
@@ -212,10 +211,7 @@ const createStyles = (theme: any) =>
       fontFamily: theme.fonts.semiBold,
       color: theme.text,
     },
-    signInButton: {
-      backgroundColor: theme.text,
-      borderRadius: BorderRadius.button, // Standard Apple button radius
-    },
+    signInButton: {},
     dividerRow: {
       flexDirection: "row",
       alignItems: "center",

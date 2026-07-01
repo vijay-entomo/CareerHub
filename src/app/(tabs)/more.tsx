@@ -30,6 +30,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { BottomSheetModal } from "../../components/BottomSheetModal";
 import { GlassIconButton, Header } from "../../components/Header";
+import { Button } from "@/components/Button";
 
 const MENU_ITEMS = [
   {
@@ -354,7 +355,7 @@ export default function More() {
           </Text>
 
           <View style={styles.emptyCardsCol}>
-            <TouchableOpacity style={styles.emptyCard}>
+            <View style={styles.emptyCard}>
               <View
                 style={[
                   styles.emptyCardIconWrapper,
@@ -370,31 +371,14 @@ export default function More() {
                 Drop your PDF and we'll instantly parse and organize your
                 experience into the correct sections.
               </Text>
-              <View
-                style={[
-                  styles.emptyCardBtn,
-                  { backgroundColor: theme.primary },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.emptyCardBtnText,
-                    { color: theme.primaryForeground },
-                  ]}
-                >
-                  Upload Resume
-                </Text>
-              </View>
-            </TouchableOpacity>
+              <Button
+                title="Upload Resume"
+                fullWidth
+                onPress={() => {}}
+              />
+            </View>
 
-            <TouchableOpacity
-              style={styles.emptyCard}
-              onPress={() => {
-                setShowProfileOnboarding(false);
-                // Navigate to the dashboard (simulate hasData=true)
-                router.push("/master-profile/master-profile");
-              }}
-            >
+            <View style={styles.emptyCard}>
               <View
                 style={[
                   styles.emptyCardIconWrapper,
@@ -410,22 +394,16 @@ export default function More() {
                 Prefer full control? Manually craft your Master Profile
                 step-by-step with our guided templates.
               </Text>
-              <View
-                style={[
-                  styles.emptyCardBtn,
-                  { backgroundColor: theme.primary },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.emptyCardBtnText,
-                    { color: theme.primaryForeground },
-                  ]}
-                >
-                  Start Building
-                </Text>
-              </View>
-            </TouchableOpacity>
+              <Button
+                title="Start Building"
+                fullWidth
+                onPress={() => {
+                  setShowProfileOnboarding(false);
+                  // Navigate to the dashboard (simulate hasData=true)
+                  router.push("/master-profile/master-profile");
+                }}
+              />
+            </View>
           </View>
         </ScrollView>
       </BottomSheetModal>
@@ -533,7 +511,6 @@ const createStyles = (theme: any) =>
     metricValue: {
       fontSize: 18,
       fontFamily: theme.fonts.bold,
-      fontWeight: "bold",
       marginBottom: 4,
     },
     metricLabel: {

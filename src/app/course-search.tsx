@@ -150,6 +150,7 @@ export default function CourseSearchScreen() {
   const { q } = useLocalSearchParams();
   const theme = useTheme();
   const commonStyles = useCommonStyles();
+  const styles = createStyles(theme);
   const [query, setQuery] = useState((q as string) || "");
   const [submittedQuery, setSubmittedQuery] = useState((q as string) || "");
   const inputRef = useRef<TextInput>(null);
@@ -598,7 +599,7 @@ export default function CourseSearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   searchBarContainer: {
     flex: 1,
     flexDirection: "row",
@@ -647,10 +648,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   categoryBentoText: {
-    fontFamily: "System",
+    fontFamily: theme.fonts.medium,
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "500",
   },
   pill: {
     flexDirection: "row",
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
   },
   pillText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: theme.fonts.medium,
   },
   courseCardsContainer: {
     gap: 16,
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 16,
     marginBottom: 4,
-    fontWeight: "bold",
+    fontFamily: theme.fonts.bold,
   },
   resultSubtitle: {
     fontSize: 14,
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   },
   skillText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: theme.fonts.medium,
   },
   suggestionRow: {
     flexDirection: "row",
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     fontSize: 16,
-    fontWeight: "500",
+    fontFamily: theme.fonts.medium,
   },
   emptyStateContainer: {
     alignItems: "center",
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: theme.fonts.semiBold,
     textAlign: "center",
     marginBottom: 8,
   },

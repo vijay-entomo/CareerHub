@@ -1,5 +1,5 @@
 import { useTheme } from "@/hooks/use-theme";
-import { Award, CheckCircle2, Heart, Star, User } from "lucide-react-native";
+import { Award, Bookmark, CheckCircle2, Star, User } from "lucide-react-native";
 import { useState } from "react";
 import {
   Image,
@@ -80,7 +80,7 @@ export const CourseCard = ({
               ]}
             >
               <Animated.View style={animatedStyle}>
-                <Heart
+                <Bookmark
                   size={14}
                   color={isFav ? theme.danger : theme.text}
                   fill={isFav ? theme.danger : "transparent"}
@@ -143,7 +143,7 @@ export const CourseCard = ({
             ]}
           >
             <Animated.View style={animatedStyle}>
-              <Heart
+              <Bookmark
                 size={18}
                 color={isFav ? theme.danger : theme.text}
                 fill={isFav ? theme.danger : "transparent"}

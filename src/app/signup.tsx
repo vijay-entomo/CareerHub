@@ -143,8 +143,8 @@ export default function Signup() {
               <Button
                 title="Sign Up"
                 onPress={handleSignUp}
-                style={styles.signUpButton}
-                textStyle={{ fontSize: 16 }}
+                variant="contrast"
+                shape="square"
               />
 
               <View style={styles.dividerRow}>
@@ -228,10 +228,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: "#FF3B30",
     marginTop: 4,
   },
-  signUpButton: {
-    backgroundColor: theme.text,
-    borderRadius: BorderRadius.button, // Standard Apple button radius
-  },
+  signUpButton: {},
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",

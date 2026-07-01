@@ -82,8 +82,9 @@ export default function ForgotPassword() {
               <Button 
                 title="Send Reset Link" 
                 onPress={handleReset} 
-                style={styles.resetButton} 
-                textStyle={{ fontSize: 16 }}
+                variant="contrast"
+                shape="square"
+                style={{ marginTop: 16 }}
               />
 
             </MotiView>
@@ -143,11 +144,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   formContainer: {
     width: '100%',
   },
-  resetButton: {
-    backgroundColor: theme.text,
-    borderRadius: BorderRadius.button,
-    marginTop: 16,
-  },
+  resetButton: {},
   footerContainer: {
     alignItems: 'center',
     marginTop: 40,

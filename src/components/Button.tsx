@@ -1,132 +1,205 @@
+import { getContrastColor } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 import React from "react";
 import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  TouchableOpacityProps,
   ActivityIndicator,
-  TextStyle,
+  Pressable,
   StyleProp,
+  Text,
+  TextStyle,
+  ViewStyle,
 } from "react-native";
-import { BorderRadius } from "../constants/theme";
-import { useTheme } from "@/hooks/use-theme";
 
-interface ButtonProps extends TouchableOpacityProps {
-  title: string;
-  variant?: "primary" | "secondary" | "text" | "icon";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "contrast";
+export type ButtonSize = "small" | "default" | "large";
+export type ButtonShape = "pill" | "rounded" | "square";
+
+export interface ButtonProps {
+  title?: string;
+  onPress: () => void;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  disabled?: boolean;
   loading?: boolean;
+  icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
+  style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  fullWidth?: boolean;
+  shape?: ButtonShape;
 }
 
-export const Button = ({
+export function Button({
   title,
+  onPress,
   variant = "primary",
-  loading,
+  size = "default",
+  disabled = false,
+  loading = false,
+  icon,
+  iconPosition = "left",
   style,
   textStyle,
-  ...props
-}: ButtonProps) => {
+  fullWidth = false,
+  shape = "pill",
+}: ButtonProps) {
   const theme = useTheme();
-  const styles = createStyles(theme);
 
-  const getVariantStyles = () => {
+  const getBackgroundColor = (pressed: boolean) => {
+    if (disabled)
+      return theme.mode === "dark"
+        ? "rgba(255,255,255,0.1)"
+        : "rgba(0,0,0,0.1)";
     switch (variant) {
+      // case "primary":
+      //   return pressed ? theme.primary + "E6" : theme.primary;
       case "primary":
-        return [styles.primaryButton, style];
+        return pressed ? "#00d5ff" : "#00d5ff";
       case "secondary":
-        return [styles.secondaryButton, style];
-      case "text":
-        return [styles.textButton, style];
-      case "icon":
-        return [styles.iconButton, style];
+        return pressed
+          ? theme.mode === "dark"
+            ? "#333333"
+            : "#E5E5E5"
+          : theme.mode === "dark"
+            ? "#2A2A2A"
+            : "#F2F2F2";
+      case "outline":
+        return pressed
+          ? theme.mode === "dark"
+            ? "rgba(255,255,255,0.05)"
+            : "rgba(0,0,0,0.05)"
+          : "transparent";
+      case "contrast":
+        return pressed ? theme.text + "E6" : theme.text;
+      case "ghost":
+        return pressed
+          ? theme.mode === "dark"
+            ? "rgba(255,255,255,0.05)"
+            : "rgba(0,0,0,0.05)"
+          : "transparent";
+      default:
+        return theme.primary;
     }
   };
 
-  const getVariantTextStyles = () => {
+  const getTextColor = () => {
+    if (disabled) return theme.textSecondary;
     switch (variant) {
       case "primary":
-        return styles.primaryText;
+        return getContrastColor(theme.primary);
       case "secondary":
-        return styles.secondaryText;
-      case "text":
-        return styles.textText;
-      case "icon":
-        return styles.iconText;
+        return theme.text;
+      case "outline":
+        return theme.text;
+      case "ghost":
+        return theme.text;
+      case "contrast":
+        return theme.background;
+      default:
+        return getContrastColor(theme.primary);
+    }
+  };
+
+  const getBorderColor = () => {
+    if (disabled && variant === "outline") return theme.border;
+    if (variant === "outline") return theme.border;
+    if (variant === "secondary") return theme.text;
+    return "transparent";
+  };
+
+  const getHeight = () => {
+    switch (size) {
+      case "small":
+        return 40;
+      case "large":
+        return 64;
+      case "default":
+      default:
+        return 56;
+    }
+  };
+
+  const getFontSize = () => {
+    switch (size) {
+      case "small":
+        return 14;
+      case "large":
+        return 18;
+      case "default":
+      default:
+        return 16;
+    }
+  };
+
+  const getBorderRadius = () => {
+    switch (shape) {
+      case "square":
+        return 0;
+      case "rounded":
+        return 12;
+      case "pill":
+      default:
+        return 999;
     }
   };
 
   return (
-    <TouchableOpacity
-      style={getVariantStyles()}
-      activeOpacity={0.8}
-      disabled={loading || props.disabled}
-      {...props}
+    <Pressable
+      onPress={onPress}
+      disabled={disabled || loading}
+      style={({ pressed }) => [
+        {
+          height: getHeight(),
+          backgroundColor: getBackgroundColor(pressed),
+          borderWidth: variant === "outline" ? 1 : 0,
+          borderColor: getBorderColor(),
+          borderRadius: getBorderRadius(),
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "row",
+          paddingHorizontal: size === "small" ? 16 : 24,
+          opacity:
+            pressed && variant !== "primary" && variant !== "secondary"
+              ? 0.7
+              : 1,
+          width: fullWidth ? "100%" : undefined,
+        },
+        style,
+      ]}
     >
       {loading ? (
-        <ActivityIndicator
-          color={variant === "primary" ? theme.background : theme.text}
-        />
+        <ActivityIndicator color={getTextColor()} />
       ) : (
-        <Text style={[styles.text, getVariantTextStyles(), textStyle]}>{title}</Text>
+        <>
+          {icon && iconPosition === "left" && (
+            <React.Fragment>{icon}</React.Fragment>
+          )}
+          {title && (
+            <Text
+              style={[
+                {
+                  color: getTextColor(),
+                  fontFamily: theme.fonts.semiBold,
+                  fontSize: getFontSize(),
+                  marginLeft: icon && iconPosition === "left" ? 8 : 0,
+                  marginRight: icon && iconPosition === "right" ? 8 : 0,
+                },
+                textStyle,
+              ]}
+            >
+              {title}
+            </Text>
+          )}
+          {icon && iconPosition === "right" && (
+            <React.Fragment>{icon}</React.Fragment>
+          )}
+        </>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
-};
-
-const createStyles = (theme: any) => StyleSheet.create({
-  primaryButton: {
-    backgroundColor: theme.text, // Dark charcoal/black from the design
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: BorderRadius.button, // Apple HIG standard button radius
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    marginVertical: 8,
-  },
-  secondaryButton: {
-    backgroundColor: theme.background, // White pill
-    paddingVertical: 17, // Offset 1px border to match primary height exactly
-    paddingHorizontal: 23, // Offset 1px border
-    borderRadius: BorderRadius.button, // Apple HIG standard button radius
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: theme.backgroundSelected,
-  },
-  textButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconButton: {
-    backgroundColor: theme.background,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)',
-  },
-  text: {
-    fontSize: 16,
-    fontFamily: theme.fonts.semiBold,
-    letterSpacing: 0.3,
-  },
-  primaryText: {
-    color: theme.background,
-  },
-  secondaryText: {
-    color: theme.text,
-  },
-  textText: {
-    color: theme.text,
-    fontFamily: theme.fonts.medium,
-  },
-  iconText: {
-    color: theme.text,
-  },
-});
+}

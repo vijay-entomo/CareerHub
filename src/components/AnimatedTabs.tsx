@@ -1,5 +1,5 @@
 import { AppFonts } from "@/constants/theme";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Dimensions,
   Pressable,
@@ -10,8 +10,6 @@ import {
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
-  useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useTheme } from "../hooks/use-theme";
@@ -62,7 +60,7 @@ const AnimatedTabItem = ({ tab, isActive, count, onPress, onLayout }: any) => {
         ]}
         pointerEvents="none"
       />
-      
+
       {/* Active Background */}
       <Animated.View
         style={[
@@ -169,7 +167,7 @@ export function AnimatedTabs({
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
-               <AnimatedTabItem
+              <AnimatedTabItem
                 key={tab.id}
                 tab={tab}
                 isActive={isActive}
@@ -225,16 +223,16 @@ const createStyles = (theme: any) =>
     },
 
     tabText: {
-      fontFamily: AppFonts.urbanist.medium,
+      fontFamily: theme.fonts.medium,
       fontSize: 15,
       zIndex: 10,
     },
     activeTabText: {
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
     },
 
     tabCount: {
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
       fontSize: 12,
       marginLeft: 4,
       transform: [{ translateY: -2 }],

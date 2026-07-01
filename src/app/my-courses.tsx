@@ -121,7 +121,7 @@ const createStyles = (theme: any) =>
       gap: 16,
     },
     emptyText: {
-      fontFamily: AppFonts.urbanist.medium,
+      fontFamily: theme.fonts.medium,
       fontSize: 16,
       color: theme.textSecondary,
       textAlign: "center",
@@ -162,13 +162,13 @@ const createStyles = (theme: any) =>
       justifyContent: "center",
     },
     courseCardTitle: {
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
       fontSize: 16,
       color: theme.text,
       marginBottom: 4,
     },
     courseCardProvider: {
-      fontFamily: AppFonts.urbanist.medium,
+      fontFamily: theme.fonts.medium,
       fontSize: 13,
       color: theme.textSecondary,
       marginBottom: 12,
@@ -192,7 +192,7 @@ const createStyles = (theme: any) =>
       borderRadius: 3,
     },
     progressText: {
-      fontFamily: AppFonts.urbanist.bold,
+      fontFamily: theme.fonts.bold,
       fontSize: 13,
       color: theme.text,
       width: 36,

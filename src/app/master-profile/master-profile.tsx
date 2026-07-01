@@ -1,6 +1,6 @@
 import { AnimatedTabs } from "@/components/AnimatedTabs";
+import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
-import { BorderRadius } from "@/constants/theme";
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { useRouter } from "expo-router";
@@ -10,20 +10,18 @@ import {
   Code,
   Folder,
   GraduationCap,
-  Plus,
   Trophy,
   Users,
 } from "lucide-react-native";
 import { AnimatePresence, MotiView } from "moti";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
-import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import Education from "./education";
-import { EmptyState } from "@/components/EmptyState";
 
 const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 
@@ -78,9 +76,9 @@ export default function MasterProfileHub() {
       return (
         <MotiView
           key="education"
-          from={{ opacity: 0, translateX: -10 }}
-          animate={{ opacity: 1, translateX: 0 }}
-          exit={{ opacity: 0 }}
+          from={{ opacity: 0, translateY: 15, scale: 0.98 }}
+          animate={{ opacity: 1, translateY: 0, scale: 1 }}
+          exit={{ opacity: 0, translateY: -15, scale: 0.98 }}
           transition={{ type: "timing", duration: 300 }}
         >
           <Education onCountChange={handleEducationCountChange} />
@@ -91,9 +89,9 @@ export default function MasterProfileHub() {
     return (
       <MotiView
         key={activeSection.id}
-        from={{ opacity: 0, translateX: -10 }}
-        animate={{ opacity: 1, translateX: 0 }}
-        exit={{ opacity: 0 }}
+        from={{ opacity: 0, translateY: 15, scale: 0.98 }}
+        animate={{ opacity: 1, translateY: 0, scale: 1 }}
+        exit={{ opacity: 0, translateY: -15, scale: 0.98 }}
         transition={{ type: "timing", duration: 300 }}
       >
         <EmptyState
@@ -116,19 +114,22 @@ export default function MasterProfileHub() {
         showsVerticalScrollIndicator={false}
         onScroll={handleVerticalScroll}
         scrollEventThrottle={16}
-        stickyHeaderIndices={[1]}
+        stickyHeaderIndices={[0]}
       >
         {/* Sticky Tab Bar Wrapper */}
         <View style={[styles.stickyTabsWrapper]}>
           <AnimatedTabs
-            tabs={PROFILE_SECTIONS.map(s => ({ ...s, count: counts[s.id] || 0 }))}
+            tabs={PROFILE_SECTIONS.map((s) => ({
+              ...s,
+              count: counts[s.id] || 0,
+            }))}
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
         </View>
 
         <View style={styles.contentArea}>
-          <AnimatePresence exitBeforeEnter>
+          <AnimatePresence exitBeforeEnter={false} mode="wait">
             {renderActiveSection()}
           </AnimatePresence>
         </View>
@@ -140,12 +141,8 @@ export default function MasterProfileHub() {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     stickyTabsWrapper: {
-      paddingVertical: 4,
+      paddingVertical: 8,
+      backgroundColor: theme.background, // crucial for sticking without bleeding
       zIndex: 10,
-    },
-
-    contentArea: {
-      // paddingTop: 24,
-      // paddingBottom: 40,
     },
   });

@@ -1,10 +1,10 @@
 import { Check } from "lucide-react-native";
+import { AnimatePresence, MotiView } from "moti";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
-import { AnimatePresence, MotiView } from "moti";
 
 import { AppFonts } from "@/constants/theme";
 import { useCommonStyles } from "@/hooks/use-common-styles";
@@ -16,6 +16,8 @@ const COLOR_PRESETS = [
   { id: "azure", color: "#007AFF", name: "Azure Blue" },
   { id: "pink", color: "#FF2A55", name: "Neon Pink" },
   { id: "purple", color: "#B983FF", name: "Electric Purple" },
+  { id: "yellow", color: "#ffff1e", name: "Yellow" },
+  { id: "electricGreen", color: "#c7ff2e", name: "Electric Green" },
 ];
 
 const FONT_PRESETS = [
@@ -85,7 +87,11 @@ export default function GeneralSettings() {
                         from={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20,
+                        }}
                       >
                         <Check size={20} color={theme.text} />
                       </MotiView>
@@ -128,7 +134,11 @@ export default function GeneralSettings() {
                         from={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20,
+                        }}
                       >
                         <Check size={20} color={theme.text} />
                       </MotiView>

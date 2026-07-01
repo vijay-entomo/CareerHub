@@ -56,7 +56,7 @@ export function getBorderColor(hex: string) {
   return `#${baseHex}66`;
 }
 
-const lightPrimary = "#000000ff";
+const lightPrimary = "#D7FE03";
 const darkPrimary = "#D7FE03";
 
 export const Colors = {

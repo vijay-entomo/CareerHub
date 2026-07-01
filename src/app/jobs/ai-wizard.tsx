@@ -1,3 +1,7 @@
+import { Button } from "@/components/Button";
+import { FunkyLoaderPopup } from "@/components/FunkyLoaderPopup";
+import { JobCard } from "@/components/JobCard";
+import { getContrastColor } from "@/constants/theme";
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { useRouter } from "expo-router";
@@ -5,12 +9,14 @@ import {
   ArrowLeft,
   ArrowRight,
   Briefcase,
-  Check,
+  CheckCircle2,
   FileText,
+  LayoutGrid,
   Link as LinkIcon,
   MessageCircle,
   Monitor,
   Search,
+  Shield,
   Smile,
   Sparkles,
   UploadCloud,
@@ -18,6 +24,7 @@ import {
 } from "lucide-react-native";
 import { MotiView } from "moti";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Platform,
   Pressable,
@@ -27,12 +34,14 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedScrollHandler,
+  useAnimatedStyle,
   useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
-import { JobCard } from "@/components/JobCard";
-import { Header } from "../../components/Header";
+import { GlassIconButton, Header } from "../../components/Header";
 
 const INDUSTRIES = [
   { id: "i1", label: "Software & Engineering", icon: Monitor },
@@ -131,9 +140,9 @@ const EXPERIENCES = [
 ];
 
 const WORKPLACES = [
-  { id: "w1", label: "100% Remote", icon: Check },
-  { id: "w2", label: "Hybrid", icon: Check },
-  { id: "w3", label: "On-site", icon: Check },
+  { id: "w1", label: "100% Remote", icon: CheckCircle2 },
+  { id: "w2", label: "Hybrid", icon: CheckCircle2 },
+  { id: "w3", label: "On-site", icon: CheckCircle2 },
 ];
 
 const SAVED_RESUMES = [
@@ -191,6 +200,7 @@ export default function AIWizard() {
   const commonStyles = useCommonStyles();
   const styles = createStyles(theme);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -205,14 +215,98 @@ export default function AIWizard() {
   const [isExactYearsActive, setIsExactYearsActive] = useState(false);
   const [selectedWorkplace, setSelectedWorkplace] = useState<string>("");
   const [activeStep, setActiveStep] = useState(0);
+  const [isBubbleView, setIsBubbleView] = useState(false);
   const [usedAI, setUsedAI] = useState(false);
   const [isProcessingResume, setIsProcessingResume] = useState(false);
+  const [isCuratingJobs, setIsCuratingJobs] = useState(false);
   const [loadingText, setLoadingText] = useState("Analyzing your profile...");
   const scrollY = useSharedValue(0);
 
   const handleVerticalScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
+
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
+
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((e) => {
+      scale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
+      savedScale.value = scale.value;
+    });
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      const maxX = 80;
+      const minX = -350;
+      const maxY = 80;
+      const minY = -200;
+
+      let nextX = savedTranslateX.value + e.translationX;
+      let nextY = savedTranslateY.value + e.translationY;
+
+      // Apply friction (rubber-banding) if pulled outside bounds
+      if (nextX > maxX) {
+        nextX = maxX + (nextX - maxX) * 0.2;
+      } else if (nextX < minX) {
+        nextX = minX + (nextX - minX) * 0.2;
+      }
+
+      if (nextY > maxY) {
+        nextY = maxY + (nextY - maxY) * 0.2;
+      } else if (nextY < minY) {
+        nextY = minY + (nextY - minY) * 0.2;
+      }
+
+      translateX.value = nextX;
+      translateY.value = nextY;
+    })
+    .onEnd(() => {
+      const maxX = 80;
+      const minX = -350;
+      const maxY = 80;
+      const minY = -200;
+
+      let snapX = translateX.value;
+      let snapY = translateY.value;
+
+      if (translateX.value > maxX) snapX = maxX;
+      else if (translateX.value < minX) snapX = minX;
+
+      if (translateY.value > maxY) snapY = maxY;
+      else if (translateY.value < minY) snapY = minY;
+
+      // Stiff spring with overshootClamping so it returns immediately without oscillating
+      translateX.value = withSpring(snapX, {
+        damping: 25,
+        stiffness: 200,
+        overshootClamping: true,
+      });
+      translateY.value = withSpring(snapY, {
+        damping: 25,
+        stiffness: 200,
+        overshootClamping: true,
+      });
+
+      savedTranslateX.value = snapX;
+      savedTranslateY.value = snapY;
+    });
+
+  const composed = Gesture.Simultaneous(pinchGesture, panGesture);
+
+  const animatedBubbleStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
 
   const toggleIndustry = (id: string) => {
     setSelectedIndustries((prev) => {
@@ -259,6 +353,10 @@ export default function AIWizard() {
     if (activeStep === 0) {
       if (linkedinUrl || selectedResumeId) {
         setIsProcessingResume(true);
+        setLoadingText("Reading resume...");
+        setTimeout(() => setLoadingText("Extracting key skills..."), 700);
+        setTimeout(() => setLoadingText("Detecting core industries..."), 1400);
+        setTimeout(() => setLoadingText("Calculating seniority..."), 2100);
         setTimeout(() => {
           setSelectedIndustries(["i1"]); // Software & Engineering
           setSelectedSkills(["s1", "s4", "s8"]); // React, SQL, TypeScript
@@ -267,7 +365,7 @@ export default function AIWizard() {
           setUsedAI(true);
           setIsProcessingResume(false);
           setActiveStep(1);
-        }, 2000);
+        }, 2800);
       } else {
         setUsedAI(false);
         setActiveStep(1);
@@ -275,27 +373,28 @@ export default function AIWizard() {
       return;
     }
 
-    if (activeStep < 5) {
+    if (activeStep < 4) {
       setActiveStep(activeStep + 1);
-      if (activeStep === 4) {
-        // Premium Processing Simulation
-        setTimeout(
-          () => setLoadingText("Cross-referencing 5,000+ open roles..."),
-          1200,
-        );
-        setTimeout(
-          () => setLoadingText("Filtering by your workplace preferences..."),
-          2500,
-        );
-        setTimeout(
-          () => setLoadingText("Curating your perfect matches..."),
-          3800,
-        );
-        setTimeout(() => {
-          setActiveStep(6);
-          setLoadingText("Analyzing your profile...");
-        }, 5000);
-      }
+    } else if (activeStep === 4) {
+      setIsCuratingJobs(true);
+      setLoadingText("Matching your skills to the market...");
+      setTimeout(
+        () => setLoadingText("Cross-referencing 5,000+ open roles..."),
+        1200,
+      );
+      setTimeout(
+        () => setLoadingText("Filtering by your workplace preferences..."),
+        2500,
+      );
+      setTimeout(
+        () => setLoadingText("Curating your perfect matches..."),
+        3800,
+      );
+      setTimeout(() => {
+        setIsCuratingJobs(false);
+        setActiveStep(6);
+        setLoadingText("Analyzing your profile...");
+      }, 5000);
     }
   };
 
@@ -318,126 +417,263 @@ export default function AIWizard() {
       {activeStep === 6 && (
         <Header
           key="header-results"
-          title="Curated Matches"
+          title="AI-Matched Roles"
           showBack
           rightComponent={
             <Pressable onPress={() => setActiveStep(0)}>
-              <Text style={{ fontFamily: theme.fonts.bold, color: theme.primary, fontSize: 16 }}>
-                Retake
+              <Text
+                style={{
+                  fontFamily: theme.fonts.bold,
+                  color: theme.text,
+                  fontSize: 16,
+                }}
+              >
+                Recalibrate
               </Text>
             </Pressable>
           }
+          scrollY={scrollY}
         />
       )}
       <View style={{ flex: 1, paddingTop: activeStep === 6 ? 0 : 16 }}>
         {activeStep < 6 && (
           <View style={styles.wizardTopBar}>
-            <Pressable
-              onPress={() => router.back()}
-              style={styles.closeBtn}
-            >
-              <X size={24} color={theme.textSecondary} />
-            </Pressable>
+            {activeStep === 1 && (
+              <View style={{ marginRight: 12 }}>
+                <GlassIconButton
+                  onPress={() => setIsBubbleView(!isBubbleView)}
+                  scrollY={scrollY}
+                >
+                  <LayoutGrid size={22} color={theme.text} />
+                </GlassIconButton>
+              </View>
+            )}
+            <GlassIconButton onPress={() => router.back()} scrollY={scrollY}>
+              <X size={24} color={theme.text} />
+            </GlassIconButton>
           </View>
         )}
         <Animated.ScrollView
           contentContainerStyle={[
             commonStyles.scrollContent,
             activeStep < 6 ? { paddingTop: 0 } : {},
+            // { paddingBottom: 0 }
           ]}
-            showsVerticalScrollIndicator={false}
-            onScroll={handleVerticalScroll}
-            scrollEventThrottle={16}
-          >
-            <View style={styles.flowContent}>
-              {/* Heading */}
-              {activeStep !== 5 && (
-                <MotiView
-                  key={`heading-${activeStep}`}
-                  from={{ opacity: 0, translateY: 10 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ type: "timing", duration: 400 }}
-                  style={styles.headingContainer}
-                >
-                  <Text style={styles.mainHeading}>
-                    {activeStep === 0 && "Let AI do the heavy lifting."}
-                    {activeStep === 1 &&
-                      (usedAI
-                        ? "Target Industries"
-                        : "Where do you want to make an impact?")}
-                    {activeStep === 2 &&
-                      (usedAI
-                        ? "Your Superpowers"
-                        : "What are your core strengths?")}
-                    {activeStep === 3 &&
-                      (usedAI
-                        ? "Career Trajectory"
-                        : "Where are you in your journey?")}
-                    {activeStep === 4 && "Define your ideal setup."}
-                  </Text>
-                  <Text style={styles.subHeading}>
-                    {activeStep === 0 &&
-                      "Upload your resume or paste your LinkedIn. We'll extract your skills and build your profile in seconds."}
-                    {activeStep === 1 &&
-                      (usedAI
-                        ? "We've detected these core industries based on your background. Does this look accurate?"
-                        : "Select up to 3 fields so we can curate the perfect opportunities for you.")}
-                    {activeStep === 2 &&
-                      (usedAI
-                        ? "We pulled these skills from your profile. Feel free to tweak or add niche tools."
-                        : "Pick the tools and skills you command daily. (Choose up to 10)")}
-                    {activeStep === 3 &&
-                      (usedAI
-                        ? "We've estimated your seniority level. Adjust the dial if we missed the mark."
-                        : "Help us understand your seniority so we can filter out the noise.")}
-                    {activeStep === 4 &&
-                      "Remote, hybrid, or in-office? We'll only match you with roles that fit your lifestyle."}
-                  </Text>
-                </MotiView>
-              )}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleVerticalScroll}
+          scrollEventThrottle={16}
+        >
+          <View style={styles.flowContent}>
+            {/* Heading */}
+            {activeStep < 5 && (
+              <MotiView
+                key={`heading-${activeStep}`}
+                from={{ opacity: 0, translateY: 10 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: "timing", duration: 400 }}
+                style={styles.headingContainer}
+              >
+                <Text style={styles.mainHeading}>
+                  {activeStep === 0 && t("aiWizard.title")}
+                  {activeStep === 1 &&
+                    (usedAI
+                      ? "Target Industries"
+                      : "Where do you want to make an impact?")}
+                  {activeStep === 2 &&
+                    (usedAI
+                      ? "Your Superpowers"
+                      : "What are your core strengths?")}
+                  {activeStep === 3 &&
+                    (usedAI
+                      ? "Career Trajectory"
+                      : "Where are you in your journey?")}
+                  {activeStep === 4 && "Define your ideal setup."}
+                </Text>
+                <Text style={styles.subHeading}>
+                  {activeStep === 0 && t("aiWizard.subtitle")}
+                  {activeStep === 1 &&
+                    (usedAI
+                      ? "We've detected these core industries based on your background. Does this look accurate?"
+                      : "Select up to 3 fields so we can curate the perfect opportunities for you.")}
+                  {activeStep === 2 &&
+                    (usedAI
+                      ? "We pulled these skills from your profile. Feel free to tweak or add niche tools."
+                      : "Pick the tools and skills you command daily. (Choose up to 10)")}
+                  {activeStep === 3 &&
+                    (usedAI
+                      ? "We've estimated your seniority level. Adjust the dial if we missed the mark."
+                      : "Help us understand your seniority so we can filter out the noise.")}
+                  {activeStep === 4 &&
+                    "Remote, hybrid, or in-office? We'll only match you with roles that fit your lifestyle."}
+                </Text>
+                {activeStep === 0 && (
+                  <View style={styles.disclaimerContainer}>
+                    <Shield size={14} color={theme.textSecondary} />
+                    <Text style={styles.disclaimerText}>
+                      Your data is secure. We process it temporarily to analyze
+                      your skills and will never share it without your consent.
+                    </Text>
+                  </View>
+                )}
+              </MotiView>
+            )}
 
-              {/* Search Bar for Skills */}
-              {activeStep === 2 && (
-                <MotiView
-                  from={{ opacity: 0, translateY: -10 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ delay: 200, type: "timing", duration: 300 }}
-                  style={styles.searchContainer}
-                >
-                  <Search
-                    size={20}
-                    color={theme.textSecondary}
-                    style={{ marginLeft: 16 }}
-                  />
-                  <TextInput
-                    style={[styles.searchInput, { color: theme.text }]}
-                    placeholder="Search or add a niche skill..."
-                    placeholderTextColor={theme.textSecondary}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    onSubmitEditing={addCustomSkill}
-                    returnKeyType="done"
-                  />
-                </MotiView>
-              )}
+            {/* Search Bar for Skills */}
+            {activeStep === 2 && (
+              <MotiView
+                from={{ opacity: 0, translateY: -10 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ delay: 200, type: "timing", duration: 300 }}
+                style={styles.searchContainer}
+              >
+                <Search
+                  size={20}
+                  color={theme.textSecondary}
+                  style={{ marginLeft: 16 }}
+                />
+                <TextInput
+                  style={[styles.searchInput, { color: theme.text }]}
+                  placeholder="Search or add a niche skill..."
+                  placeholderTextColor={theme.textSecondary}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  onSubmitEditing={addCustomSkill}
+                  returnKeyType="done"
+                />
+              </MotiView>
+            )}
 
-              {/* Selectable Pills */}
-              {(activeStep === 1 ||
-                activeStep === 2 ||
-                activeStep === 3 ||
-                activeStep === 4) && (
-                <MotiView
-                  key={`pills-${activeStep}`}
-                  from={{ opacity: 0, translateY: 20 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{
-                    delay: activeStep === 2 ? 300 : 100,
-                    type: "timing",
-                    duration: 300,
-                  }}
-                  style={styles.pillsContainer}
-                >
-                  {(activeStep === 1
+            {/* Selectable Pills */}
+            {(activeStep === 1 ||
+              activeStep === 2 ||
+              activeStep === 3 ||
+              activeStep === 4) && (
+              <MotiView
+                key={`pills-${activeStep}`}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{
+                  delay: activeStep === 2 ? 300 : 100,
+                  type: "timing",
+                  duration: 300,
+                }}
+                style={styles.pillsContainer}
+              >
+                {activeStep === 1 && isBubbleView ? (
+                  <View
+                    style={{
+                      width: "100%",
+                      height: 450,
+                      overflow: "hidden",
+                      borderRadius: 24,
+                      backgroundColor:
+                        theme.mode === "dark"
+                          ? "rgba(0,0,0,0.2)"
+                          : "rgba(0,0,0,0.02)",
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <GestureDetector gesture={composed}>
+                      <Animated.View
+                        style={[styles.bubbleContainer, animatedBubbleStyle]}
+                      >
+                        {INDUSTRIES.map((item, index) => {
+                          const isSelected = selectedIndustries.includes(
+                            item.id,
+                          );
+                          const Icon = item.icon;
+                          const sizes = [
+                            120, 95, 130, 100, 110, 85, 135, 95, 115, 80, 100,
+                          ];
+
+                          // Widely spaced coordinates to eliminate bad overlapping
+                          const positions = [
+                            { top: 50, left: 50 },
+                            { top: 80, left: 200 },
+                            { top: 40, left: 350 },
+                            { top: 200, left: 30 },
+                            { top: 220, left: 180 },
+                            { top: 180, left: 340 },
+                            { top: 120, left: 500 },
+                            { top: 350, left: 80 },
+                            { top: 360, left: 240 },
+                            { top: 320, left: 420 },
+                            { top: 280, left: 580 },
+                          ];
+
+                          const INDUSTRY_COLORS = [
+                            "#60B9E5",
+                            "#A375FF",
+                            "#FF9D7E",
+                            "#FFB46E",
+                            "#95D08C",
+                            "#FFC371",
+                          ];
+                          const bubbleColor =
+                            INDUSTRY_COLORS[index % INDUSTRY_COLORS.length];
+
+                          const size = sizes[index % sizes.length];
+                          const pos = positions[index % positions.length];
+
+                          return (
+                            <Pressable
+                              key={item.id}
+                              onPress={() => toggleIndustry(item.id)}
+                            >
+                              <MotiView
+                                animate={{
+                                  backgroundColor: isSelected
+                                    ? bubbleColor
+                                    : theme.mode === "dark"
+                                      ? "#2A2A35"
+                                      : "#FFFFFF",
+                                  opacity: 1,
+                                  borderWidth: isSelected ? 0 : 1,
+                                  borderColor: isSelected
+                                    ? bubbleColor
+                                    : theme.border,
+                                  scale: isSelected ? 1.05 : 1,
+                                }}
+                                transition={{ type: "timing", duration: 300 }}
+                                style={[
+                                  styles.bubbleItem,
+                                  {
+                                    width: size,
+                                    height: size,
+                                    borderRadius: size / 2,
+                                    top: pos.top,
+                                    left: pos.left,
+                                  },
+                                ]}
+                              >
+                                <Icon
+                                  size={size > 110 ? 24 : 18}
+                                  color={
+                                    isSelected ? "#FFF" : theme.textSecondary
+                                  }
+                                />
+                                <Text
+                                  style={[
+                                    styles.bubbleText,
+                                    {
+                                      color: isSelected ? "#FFF" : theme.text,
+                                      fontSize: size > 110 ? 13 : 11,
+                                    },
+                                  ]}
+                                  numberOfLines={2}
+                                >
+                                  {item.label}
+                                </Text>
+                              </MotiView>
+                            </Pressable>
+                          );
+                        })}
+                      </Animated.View>
+                    </GestureDetector>
+                  </View>
+                ) : (
+                  (activeStep === 1
                     ? INDUSTRIES
                     : activeStep === 2
                       ? availableSkills
@@ -470,24 +706,24 @@ export default function AIWizard() {
                         <MotiView
                           animate={{
                             backgroundColor: isSelected
-                              ? "#4A60FF"
+                              ? theme.primary
                               : theme.mode === "dark"
                                 ? "rgba(255,255,255,0.05)"
-                                : "#FFFFFF",
+                                : theme.backgroundElement,
                             borderColor: isSelected
-                              ? "#4A60FF"
+                              ? theme.primary
                               : theme.mode === "dark"
                                 ? "rgba(255,255,255,0.1)"
-                                : "#E0E0E0",
+                                : theme.border,
                             scale: isSelected ? 1.05 : 1,
                           }}
                           transition={{ type: "timing", duration: 250 }}
                           style={styles.pill}
                         >
                           {isSelected ? (
-                            <Check
+                            <CheckCircle2
                               size={16}
-                              color="#FFFFFF"
+                              color={theme.primaryForeground}
                               strokeWidth={2.5}
                             />
                           ) : (
@@ -501,7 +737,7 @@ export default function AIWizard() {
                               styles.pillText,
                               {
                                 color: isSelected
-                                  ? "#FFFFFF"
+                                  ? theme.primaryForeground
                                   : theme.mode === "dark"
                                     ? "#FFF"
                                     : "#333",
@@ -513,344 +749,296 @@ export default function AIWizard() {
                         </MotiView>
                       </Pressable>
                     );
-                  })}
-                  {activeStep === 2 &&
-                    searchQuery.trim().length > 0 &&
-                    availableSkills.length === 0 && (
-                      <Pressable
-                        onPress={addCustomSkill}
-                        style={styles.addCustomBtn}
-                      >
-                        <Text
-                          style={{
-                            color: theme.text,
-                            fontFamily: theme.fonts.medium,
-                          }}
-                        >
-                          + Add "{searchQuery}"
-                        </Text>
-                      </Pressable>
-                    )}
-                </MotiView>
-              )}
-
-              {/* Exact Years Counter */}
-              {activeStep === 3 && (
-                <MotiView
-                  from={{ opacity: 0, translateY: 20 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ delay: 200, type: "timing", duration: 300 }}
-                  style={styles.counterContainer}
-                >
-                  <Text style={styles.counterLabel}>
-                    Pinpoint your exact years of experience
-                  </Text>
-                  <View
-                    style={[
-                      styles.counterControl,
-                      !isExactYearsActive &&
-                        selectedExp !== "" && { opacity: 0.4 },
-                    ]}
-                  >
+                  })
+                )}
+                {activeStep === 2 &&
+                  searchQuery.trim().length > 0 &&
+                  availableSkills.length === 0 && (
                     <Pressable
-                      style={styles.counterBtn}
-                      onPress={() =>
-                        handleExactYearsChange(Math.max(0, exactYears - 1))
-                      }
+                      onPress={addCustomSkill}
+                      style={styles.addCustomBtn}
                     >
-                      <Text style={styles.counterBtnText}>-</Text>
-                    </Pressable>
-                    <View style={styles.counterValueContainer}>
-                      <Text style={styles.counterValue}>{exactYears}</Text>
-                      <Text style={styles.counterSuffix}>
-                        {exactYears === 1 ? "Year" : "Years"}
-                      </Text>
-                    </View>
-                    <Pressable
-                      style={styles.counterBtn}
-                      onPress={() => handleExactYearsChange(exactYears + 1)}
-                    >
-                      <Text style={styles.counterBtnText}>+</Text>
-                    </Pressable>
-                  </View>
-                </MotiView>
-              )}
-
-              {/* Resume / LinkedIn Selection (Step 0) */}
-              {activeStep === 0 && (
-                <MotiView
-                  from={{ opacity: 0, translateY: 20 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ delay: 200, type: "timing", duration: 300 }}
-                  style={styles.resumeContainer}
-                >
-                  <View style={{ marginBottom: 24 }}>
-                    <Text style={styles.sectionLabel}>Saved Resumes</Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ gap: 12, paddingRight: 24 }}
-                    >
-                      {SAVED_RESUMES.map((resume) => {
-                        const isSelected = selectedResumeId === resume.id;
-                        return (
-                          <Pressable
-                            key={resume.id}
-                            style={[
-                              styles.resumeMiniCard,
-                              isSelected && styles.resumeCardActive,
-                            ]}
-                            onPress={() => {
-                              setSelectedResumeId(
-                                isSelected ? null : resume.id,
-                              );
-                              setLinkedinUrl("");
-                            }}
-                          >
-                            <View
-                              style={[
-                                styles.resumeCardIconWrapper,
-                                {
-                                  marginBottom: 12,
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius: 20,
-                                },
-                              ]}
-                            >
-                              <FileText
-                                size={20}
-                                color={
-                                  isSelected ? "#FFF" : theme.textSecondary
-                                }
-                              />
-                            </View>
-                            <Text
-                              style={[
-                                styles.resumeCardTitle,
-                                isSelected && { color: "#FFF" },
-                              ]}
-                              numberOfLines={1}
-                            >
-                              {resume.name}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.resumeCardSub,
-                                isSelected && {
-                                  color: "rgba(255,255,255,0.8)",
-                                },
-                              ]}
-                            >
-                              {resume.date}
-                            </Text>
-                            {isSelected && (
-                              <View
-                                style={{
-                                  position: "absolute",
-                                  top: 12,
-                                  right: 12,
-                                }}
-                              >
-                                <Check size={18} color="#FFF" />
-                              </View>
-                            )}
-                          </Pressable>
-                        );
-                      })}
-                    </ScrollView>
-                  </View>
-
-                  <View style={styles.resumeOptionsContainer}>
-                    <Pressable style={styles.resumeCard}>
-                      <View style={styles.resumeCardIconWrapper}>
-                        <UploadCloud size={24} color={theme.textSecondary} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.resumeCardTitle}>
-                          Upload New Resume
-                        </Text>
-                        <Text style={styles.resumeCardSub}>
-                          PDF, DOCX up to 5MB
-                        </Text>
-                      </View>
-                    </Pressable>
-                  </View>
-
-                  <View style={styles.linkedInContainer}>
-                    <Text style={styles.linkedInLabel}>
-                      Or drop your LinkedIn URL
-                    </Text>
-                    <View style={styles.linkedInInputWrapper}>
-                      <LinkIcon
-                        size={20}
-                        color={theme.textSecondary}
-                        style={{ marginLeft: 16 }}
-                      />
-                      <TextInput
-                        style={[styles.searchInput, { color: theme.text }]}
-                        placeholder="https://linkedin.com/in/..."
-                        placeholderTextColor={theme.textSecondary}
-                        value={linkedinUrl}
-                        onChangeText={(t) => {
-                          setLinkedinUrl(t);
-                          if (t) setSelectedResumeId(null);
+                      <Text
+                        style={{
+                          color: theme.text,
+                          fontFamily: theme.fonts.medium,
                         }}
-                        autoCapitalize="none"
-                        keyboardType="url"
-                      />
-                    </View>
-                  </View>
-                </MotiView>
-              )}
+                      >
+                        + Add "{searchQuery}"
+                      </Text>
+                    </Pressable>
+                  )}
+              </MotiView>
+            )}
 
-              {activeStep === 5 && (
-                <MotiView
-                  key="step-5-loading"
-                  from={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: "timing", duration: 400 }}
-                  style={[styles.headingContainer, { marginTop: 60 }]}
-                >
-                  <View
-                    style={{
-                      position: "relative",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: 32,
-                    }}
-                  >
-                    <MotiView
-                      from={{ scale: 1, opacity: 0.5 }}
-                      animate={{ scale: 1.8, opacity: 0 }}
-                      transition={{
-                        type: "timing",
-                        duration: 1500,
-                        loop: true,
-                      }}
-                      style={{
-                        position: "absolute",
-                        width: 80,
-                        height: 80,
-                        borderRadius: 40,
-                        backgroundColor: "#4A60FF",
-                      }}
-                    />
-                    <MotiView
-                      from={{ scale: 1, opacity: 0.5 }}
-                      animate={{ scale: 1.8, opacity: 0 }}
-                      transition={{
-                        type: "timing",
-                        duration: 1500,
-                        delay: 750,
-                        loop: true,
-                      }}
-                      style={{
-                        position: "absolute",
-                        width: 80,
-                        height: 80,
-                        borderRadius: 40,
-                        backgroundColor: "#9D4EDD",
-                      }}
-                    />
-                    <View
-                      style={[
-                        styles.aiIconWrapper,
-                        { width: 80, height: 80, borderRadius: 40 },
-                      ]}
-                    >
-                      <Sparkles size={40} color="#FFF" />
-                    </View>
-                  </View>
-
-                  <Text style={styles.mainHeading}>{loadingText}</Text>
-                  <Text style={[styles.subHeading, { marginTop: 16 }]}>
-                    Please hold on while our AI builds your highly personalized
-                    career graph.
-                  </Text>
-                </MotiView>
-              )}
-
-              {activeStep === 6 && (
-                <MotiView
-                  key="step-6-results"
-                  from={{ opacity: 0, translateY: 20 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  transition={{ type: "timing", duration: 400 }}
-                  style={{ gap: 16, paddingBottom: 40 }}
-                >
-                  <Text style={[styles.mainHeading, { marginBottom: 16 }]}>
-                    Your Curated Matches
-                  </Text>
-                  {AI_MATCHED_JOBS.map((job) => (
-                    <JobCard key={job.id} {...job} />
-                  ))}
-                </MotiView>
-              )}
-            </View>
-          </Animated.ScrollView>
-
-          {/* Fixed Footer Controls */}
-          {activeStep < 5 && (
-            <MotiView
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 300, type: "timing" }}
-              style={styles.flowFooter}
-            >
-              <View style={styles.footerLeft}>
-                <MotiView
-                  animate={{
-                    width: activeStep > 0 ? 40 : 0,
-                    opacity: activeStep > 0 ? 1 : 0,
-                    marginRight: activeStep > 0 ? 16 : 0,
-                  }}
-                  transition={{ type: "timing", duration: 300 }}
-                  style={{ overflow: "hidden" }}
+            {/* Exact Years Counter */}
+            {activeStep === 3 && (
+              <MotiView
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ delay: 200, type: "timing", duration: 300 }}
+                style={styles.counterContainer}
+              >
+                <Text style={styles.counterLabel}>
+                  Pinpoint your exact years of experience
+                </Text>
+                <View
+                  style={[
+                    styles.counterControl,
+                    !isExactYearsActive &&
+                      selectedExp !== "" && { opacity: 0.4 },
+                  ]}
                 >
                   <Pressable
-                    onPress={() => setActiveStep(activeStep - 1)}
-                    style={styles.footerBackBtn}
-                    disabled={isProcessingResume || activeStep === 0}
+                    style={styles.counterBtn}
+                    onPress={() =>
+                      handleExactYearsChange(Math.max(0, exactYears - 1))
+                    }
                   >
-                    <ArrowLeft size={24} color={theme.text} />
+                    <Text style={styles.counterBtnText}>-</Text>
                   </Pressable>
-                </MotiView>
-
-                <View style={styles.pagination}>
-                  {[0, 1, 2, 3, 4].map((step) => (
-                    <View
-                      key={step}
-                      style={[
-                        styles.dot,
-                        activeStep === step ? styles.dotActive : null,
-                      ]}
-                    />
-                  ))}
+                  <View style={styles.counterValueContainer}>
+                    <Text style={styles.counterValue}>{exactYears}</Text>
+                    <Text style={styles.counterSuffix}>
+                      {exactYears === 1 ? "Year" : "Years"}
+                    </Text>
+                  </View>
+                  <Pressable
+                    style={styles.counterBtn}
+                    onPress={() => handleExactYearsChange(exactYears + 1)}
+                  >
+                    <Text style={styles.counterBtnText}>+</Text>
+                  </Pressable>
                 </View>
-              </View>
+              </MotiView>
+            )}
 
-              <Pressable
-                onPress={handleNext}
-                style={[styles.nextBtn, isNextDisabled() && { opacity: 0.5 }]}
-                disabled={isNextDisabled() || isProcessingResume}
+            {/* Resume / LinkedIn Selection (Step 0) */}
+            {activeStep === 0 && (
+              <MotiView
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ delay: 200, type: "timing", duration: 300 }}
+                style={styles.resumeContainer}
               >
-                <Text style={styles.nextText}>
-                  {activeStep === 0
-                    ? isProcessingResume
-                      ? "Analyzing..."
-                      : linkedinUrl || selectedResumeId
-                        ? "Analyze Profile"
-                        : "Skip"
-                    : activeStep === 4
-                      ? "Finish"
-                      : "Next"}
-                </Text>
-                <ArrowRight size={20} color={theme.background} />
-              </Pressable>
-            </MotiView>
-          )}
+                <View style={{ marginBottom: 24 }}>
+                  <Text style={styles.sectionLabel}>Saved Resumes</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 12 }}
+                  >
+                    {SAVED_RESUMES.map((resume) => {
+                      const isSelected = selectedResumeId === resume.id;
+                      return (
+                        <Pressable
+                          key={resume.id}
+                          style={[
+                            styles.resumeMiniCard,
+                            isSelected && styles.resumeCardActive,
+                          ]}
+                          onPress={() => {
+                            setSelectedResumeId(isSelected ? null : resume.id);
+                            setLinkedinUrl("");
+                          }}
+                        >
+                          <View
+                            style={[
+                              styles.resumeCardIconWrapper,
+                              {
+                                marginBottom: 12,
+                                width: 40,
+                                height: 40,
+                                borderRadius: 20,
+                              },
+                            ]}
+                          >
+                            <FileText
+                              size={20}
+                              color={
+                                isSelected
+                                  ? theme.primaryForeground
+                                  : theme.textSecondary
+                              }
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.resumeCardTitle,
+                              isSelected && { color: theme.primaryForeground },
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {resume.name}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.resumeCardSub,
+                              isSelected && {
+                                color: theme.primaryForeground,
+                                opacity: 0.8,
+                              },
+                            ]}
+                          >
+                            {resume.date}
+                          </Text>
+                          {isSelected && (
+                            <View
+                              style={{
+                                position: "absolute",
+                                top: 12,
+                                right: 12,
+                              }}
+                            >
+                              <CheckCircle2
+                                size={18}
+                                color={theme.primaryForeground}
+                              />
+                            </View>
+                          )}
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+
+                <View style={styles.resumeOptionsContainer}>
+                  <Pressable style={styles.resumeCard}>
+                    <View style={styles.resumeCardIconWrapper}>
+                      <UploadCloud size={24} color={theme.textSecondary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.resumeCardTitle}>
+                        Upload New Resume
+                      </Text>
+                      <Text style={styles.resumeCardSub}>
+                        PDF, DOCX up to 5MB
+                      </Text>
+                    </View>
+                  </Pressable>
+                </View>
+
+                <View style={styles.linkedInContainer}>
+                  <Text style={styles.linkedInLabel}>
+                    Or drop your LinkedIn URL
+                  </Text>
+                  <View style={styles.linkedInInputWrapper}>
+                    <LinkIcon
+                      size={20}
+                      color={theme.textSecondary}
+                      style={{ marginLeft: 16 }}
+                    />
+                    <TextInput
+                      style={[styles.searchInput, { color: theme.text }]}
+                      placeholder="https://linkedin.com/in/..."
+                      placeholderTextColor={theme.textSecondary}
+                      value={linkedinUrl}
+                      onChangeText={(t) => {
+                        setLinkedinUrl(t);
+                        if (t) setSelectedResumeId(null);
+                      }}
+                      autoCapitalize="none"
+                      keyboardType="url"
+                    />
+                  </View>
+                </View>
+              </MotiView>
+            )}
+
+            {activeStep === 6 && (
+              <MotiView
+                key="step-6-results"
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: "timing", duration: 400 }}
+                style={{ gap: 16 }}
+              >
+                {AI_MATCHED_JOBS.map((job) => (
+                  <JobCard key={job.id} {...job} />
+                ))}
+              </MotiView>
+            )}
+          </View>
+        </Animated.ScrollView>
+
+        {/* Fixed Footer Controls */}
+        {activeStep < 5 && (
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ delay: 300, type: "timing" }}
+            style={styles.flowFooter}
+          >
+            <View style={styles.footerLeft}>
+              <MotiView
+                animate={{
+                  width: activeStep > 0 ? 40 : 0,
+                  opacity: activeStep > 0 ? 1 : 0,
+                  marginRight: activeStep > 0 ? 16 : 0,
+                }}
+                transition={{ type: "timing", duration: 300 }}
+                style={{ overflow: "hidden" }}
+              >
+                <Button
+                  variant="outline"
+                  onPress={() => setActiveStep(activeStep - 1)}
+                  disabled={isProcessingResume || activeStep === 0}
+                  icon={<ArrowLeft size={20} color={theme.text} />}
+                  style={{
+                    width: 56,
+                    height: 56,
+                    paddingHorizontal: 0,
+                    borderRadius: 28,
+                  }}
+                />
+              </MotiView>
+
+              <View style={styles.pagination}>
+                {[0, 1, 2, 3, 4].map((step) => (
+                  <View
+                    key={step}
+                    style={[
+                      styles.dot,
+                      activeStep === step ? styles.dotActive : null,
+                    ]}
+                  />
+                ))}
+              </View>
+            </View>
+
+            <Button
+              onPress={handleNext}
+              disabled={isNextDisabled() || isProcessingResume}
+              style={[isNextDisabled() && { opacity: 0.5 }]}
+              iconPosition="right"
+              icon={
+                <ArrowRight size={20} color={getContrastColor(theme.primary)} />
+              }
+              title={
+                activeStep === 0
+                  ? isProcessingResume
+                    ? "Analyzing..."
+                    : linkedinUrl || selectedResumeId
+                      ? "Analyze Profile"
+                      : "Skip"
+                  : activeStep === 4
+                    ? "Finish"
+                    : "Next"
+              }
+            />
+          </MotiView>
+        )}
       </View>
+
+      <FunkyLoaderPopup
+        isVisible={isProcessingResume || isCuratingJobs}
+        title={loadingText}
+        subtitle={
+          isCuratingJobs
+            ? "Please hold on while our AI builds your highly personalized career graph."
+            : "Please hold on while our AI analyzes your background..."
+        }
+      />
     </View>
   );
 }
@@ -913,7 +1101,8 @@ const createStyles = (theme: any) =>
       width: 46,
       height: 46,
       borderRadius: 23,
-      backgroundColor: theme.mode === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+      backgroundColor:
+        theme.mode === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
       justifyContent: "center",
       alignItems: "center",
     },
@@ -967,13 +1156,13 @@ const createStyles = (theme: any) =>
     },
     headingContainer: {
       alignItems: "center",
-      marginBottom: 40,
     },
     mainHeading: {
       fontSize: 28,
       fontFamily: theme.fonts.bold,
       color: theme.text,
       textAlign: "center",
+      marginBottom: 12,
     },
     mainHeadingRow: {
       flexDirection: "row",
@@ -1088,7 +1277,9 @@ const createStyles = (theme: any) =>
       borderColor:
         theme.mode === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
       backgroundColor:
-        theme.mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+        theme.mode === "dark"
+          ? "rgba(255,255,255,0.02)"
+          : theme.backgroundElement,
       position: "relative",
     },
     resumeCard: {
@@ -1100,7 +1291,9 @@ const createStyles = (theme: any) =>
       borderColor:
         theme.mode === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
       backgroundColor:
-        theme.mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+        theme.mode === "dark"
+          ? "rgba(255,255,255,0.02)"
+          : theme.backgroundElement,
     },
     resumeCardActive: {
       backgroundColor: theme.primary,
@@ -1154,12 +1347,53 @@ const createStyles = (theme: any) =>
       color: theme.textSecondary,
       textAlign: "center",
       lineHeight: 22,
+      marginBottom: 32,
+    },
+    disclaimerContainer: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      backgroundColor:
+        theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+      padding: 12,
+      borderRadius: 12,
+      marginTop: 16,
+      marginBottom: 16,
+      gap: 10,
+    },
+    disclaimerText: {
+      flex: 1,
+      fontSize: 13,
+      fontFamily: theme.fonts.medium,
+      color: theme.textSecondary,
+      lineHeight: 18,
     },
     pillsContainer: {
       flexDirection: "row",
       flexWrap: "wrap",
+      gap: 12,
       justifyContent: "center",
-      gap: 10,
+      paddingBottom: 40,
+    },
+    bubbleContainer: {
+      width: 800,
+      height: 800,
+      position: "relative",
+    },
+    bubbleItem: {
+      position: "absolute",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 8,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 5,
+    },
+    bubbleText: {
+      fontFamily: theme.fonts.bold,
+      textAlign: "center",
+      marginTop: 6,
     },
     pill: {
       flexDirection: "row",

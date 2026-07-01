@@ -5,19 +5,21 @@ import { AnimatedTabs } from "../components/AnimatedTabs";
 import { CourseCard } from "../components/CourseCard";
 import { Header } from "../components/Header";
 import { BottomSheetModal } from "../components/BottomSheetModal";
+import { Button } from "../components/Button";
 import { useTheme } from "../hooks/use-theme";
 
 import {
+  Bookmark,
   Flame,
   Search,
   SlidersHorizontal,
   Sparkles,
   Target,
   X,
-  Check,
+  CheckCircle2,
 } from "lucide-react-native";
 import { router } from "expo-router";
-import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import Animated, { FadeInDown, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 
 const SORT_BY = ["Most Relevant", "Newest", "Highest Rated"];
 const LEVELS = ["All Levels", "Beginner", "Intermediate", "Advanced"];
@@ -27,6 +29,7 @@ const TABS = [
   { id: "Trending", label: "Trending", icon: Flame },
   { id: "Recommended", label: "Recommended", icon: Target },
   { id: "New Addition", label: "New Addition", icon: Sparkles },
+  { id: "Bookmarked", label: "Bookmarked", icon: Bookmark },
 ];
 
 const ALL_COURSES = [
@@ -105,37 +108,22 @@ export default function AllCourses() {
   ) => {
     const isActive = activeValue === label;
     return (
-      <Pressable
+      <Button
         key={label}
+        title={label}
+        variant={isActive ? "primary" : "outline"}
+        shape="pill"
+        size="small"
         onPress={() => onSelect(label)}
-        style={[
-          styles.filterPill,
-          isActive
-            ? { backgroundColor: theme.primary, borderColor: theme.primary }
-            : {
-                backgroundColor: theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "#F8F8F8",
-                borderColor: theme.mode === "dark" ? "rgba(255,255,255,0.1)" : theme.border,
-              },
-        ]}
-      >
-        {isActive && (
-          <Check
-            size={14}
-            color={theme.primaryForeground}
-            style={{ marginRight: 6 }}
-          />
-        )}
-        <Text
-          style={[
-            styles.filterPillText,
-            isActive
-              ? { color: theme.primaryForeground, fontFamily: theme.fonts.bold }
-              : { color: theme.textSecondary },
-          ]}
-        >
-          {label}
-        </Text>
-      </Pressable>
+        icon={
+          isActive ? (
+            <CheckCircle2
+              size={14}
+              color={theme.primaryForeground || "#000"}
+            />
+          ) : undefined
+        }
+      />
     );
   };
 
@@ -185,9 +173,35 @@ export default function AllCourses() {
         {/* COURSES LIST */}
         <View style={styles.listContainer}>
           {filteredCourses.length === 0 ? (
-            <Text style={styles.emptyText}>
-              No courses found in this category.
-            </Text>
+            <Animated.View
+              entering={FadeInDown.springify().damping(18).stiffness(150)}
+              style={styles.emptyStateContainer}
+            >
+              <View
+                style={[
+                  styles.emptyStateIconContainer,
+                  { backgroundColor: theme.backgroundElement },
+                ]}
+              >
+                {activeTab === "Bookmarked" ? (
+                  <Bookmark size={44} color={theme.textSecondary} strokeWidth={1.5} />
+                ) : (
+                  <Search size={44} color={theme.textSecondary} strokeWidth={1.5} />
+                )}
+              </View>
+              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>
+                {activeTab === "Bookmarked"
+                  ? "No Saved Courses"
+                  : "No Courses Found"}
+              </Text>
+              <Text
+                style={[styles.emptyStateDesc, { color: theme.textSecondary }]}
+              >
+                {activeTab === "Bookmarked"
+                  ? "Courses you bookmark will appear here. Start exploring and save your favorites to view them later!"
+                  : "We couldn't find any courses matching this category. Try exploring other topics or check back later!"}
+              </Text>
+            </Animated.View>
           ) : (
             filteredCourses.map((course) => (
               <CourseCard key={course.id} course={course} layout="vertical" />
@@ -245,29 +259,21 @@ export default function AllCourses() {
             { borderTopColor: theme.border, backgroundColor: theme.background },
           ]}
         >
-          <Pressable
-            style={styles.resetButton}
+          <Button
+            variant="ghost"
+            title="Reset"
+            style={{ flex: 1 }}
             onPress={() => {
               setSelectedSort(SORT_BY[0]);
               setSelectedLevel(LEVELS[0]);
               setSelectedFormat(FORMATS[0]);
             }}
-          >
-            <Text style={[styles.resetButtonText, { color: theme.text }]}>
-              Reset
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.applyButton,
-              { backgroundColor: theme.primary },
-            ]}
+          />
+          <Button
+            title="Apply Filters"
+            style={{ flex: 2 }}
             onPress={() => setIsFilterVisible(false)}
-          >
-            <Text style={[styles.applyButtonText, { color: theme.primaryForeground }]}>
-              Apply Filters
-            </Text>
-          </Pressable>
+          />
         </View>
       </BottomSheetModal>
     </View>
@@ -295,12 +301,32 @@ const createStyles = (theme: any) =>
       gap: 24,
       marginTop: 8,
     },
-    emptyText: {
-      fontFamily: theme.fonts.medium,
-      fontSize: 16,
-      color: theme.textSecondary,
+    emptyStateContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 60,
+      paddingHorizontal: 32,
+      paddingBottom: 40,
+    },
+    emptyStateIconContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 24,
+    },
+    emptyStateTitle: {
+      fontSize: 22,
+      fontFamily: theme.fonts.bold,
+      marginBottom: 12,
       textAlign: "center",
-      marginTop: 40,
+    },
+    emptyStateDesc: {
+      fontSize: 16,
+      fontFamily: theme.fonts.medium,
+      textAlign: "center",
+      lineHeight: 24,
     },
     modalHeader: {
       flexDirection: "row",

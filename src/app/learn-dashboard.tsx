@@ -19,6 +19,7 @@ import Svg, {
   Text as SvgText,
 } from "react-native-svg";
 import { Header } from "../components/Header";
+import { Button } from "../components/Button";
 
 const { width } = Dimensions.get("window");
 
@@ -62,10 +63,13 @@ export default function LearnDashboard() {
         <View style={styles.chartContainer}>
           <View style={styles.chartHeader}>
             <Text style={styles.chartTitle}>21h 15 min</Text>
-            <Pressable style={styles.dropdownBtn}>
-              <Text style={styles.dropdownText}>This week</Text>
-              <ChevronDown size={16} color="#FFF" />
-            </Pressable>
+            <Button
+              title="This week"
+              size="small"
+              icon={<ChevronDown size={16} color="#FFF" />}
+              iconPosition="right"
+              onPress={() => {}}
+            />
           </View>
 
           <View style={{ height: chartHeight + 40, marginTop: 32 }}>
@@ -117,7 +121,7 @@ export default function LearnDashboard() {
                           : "rgba(0,0,0,0.5)"
                       }
                       fontSize="12"
-                      fontWeight="500"
+                      fontFamily={theme.fonts.medium}
                     >
                       {tick}h
                     </SvgText>
@@ -148,7 +152,7 @@ export default function LearnDashboard() {
                       y={chartHeight + 24}
                       fill={theme.text}
                       fontSize="12"
-                      fontWeight="500"
+                      fontFamily={theme.fonts.medium}
                       textAnchor="middle"
                     >
                       {data.day}

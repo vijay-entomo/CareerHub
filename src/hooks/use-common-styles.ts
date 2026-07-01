@@ -1,5 +1,5 @@
 import { useTheme } from "@/hooks/use-theme";
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function useCommonStyles() {
@@ -32,17 +32,17 @@ export function useCommonStyles() {
     card: {
       backgroundColor: theme.backgroundElement,
       borderRadius: 24,
-      ...Platform.select({
-        ios: {
-          shadowColor: theme.mode === "dark" ? "#000" : "#888",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: theme.mode === "dark" ? 0.3 : 0.08,
-          shadowRadius: 24,
-        },
-        android: {
-          elevation: 4,
-        },
-      }),
+      // ...Platform.select({
+      //   ios: {
+      //     shadowColor: theme.mode === "dark" ? "#000" : "#888",
+      //     shadowOffset: { width: 0, height: 8 },
+      //     shadowOpacity: theme.mode === "dark" ? 0.3 : 0.08,
+      //     shadowRadius: 24,
+      //   },
+      //   android: {
+      //     elevation: 4,
+      //   },
+      // }),
       // @ts-ignore
       borderCurve: "continuous",
     },
