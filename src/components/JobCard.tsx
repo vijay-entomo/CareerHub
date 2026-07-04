@@ -138,12 +138,15 @@ export function JobCard({
         <View style={styles.footerRow}>
           <Button
             variant="outline"
+            size="small"
             onPress={onBookmarkPress || (() => {})}
             icon={<Bookmark size={20} color={theme.text} />}
             style={{ paddingHorizontal: 16 }}
           />
           <Button
             title="View Job"
+            variant="primary"
+            size="small"
             onPress={() => {
               setDetailsVisible(true);
               onPress?.();

@@ -1,7 +1,7 @@
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { BlurView } from "expo-blur";
-import { ArrowRight, Compass, Lock, Sparkles, Target } from "lucide-react-native";
+import { ArrowRight, Compass, Lock, Sparkles, Target, Check, Award, ChevronRight } from "lucide-react-native";
 import React, { useState, useEffect } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, Modal } from "react-native";
 import { useRouter } from "expo-router";
@@ -17,6 +17,7 @@ import Animated, {
 
 import { Header } from "../../components/Header";
 import { Button } from "@/components/Button";
+import { SectionHeader } from "@/components/SectionHeader";
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -183,6 +184,93 @@ const LockedRoadmapCard = ({ theme, commonStyles }: { theme: any, commonStyles: 
           style={{ width: "100%" }}
           onPress={() => {}}
         />
+      </View>
+    </View>
+  );
+};
+
+const PathTimelineCard = ({ theme, commonStyles }: { theme: any, commonStyles: any }) => {
+  const router = useRouter();
+  const steps = [
+    { title: "Junior Product Designer", status: "completed" },
+    { title: "Product Designer", status: "pending" },
+    { title: "Senior Product Designer", status: "pending" },
+    { title: "Design Lead", status: "pending" },
+    { title: "Chief Design Officer", status: "goal" }
+  ];
+
+  return (
+    <View style={{ marginTop: 24, marginBottom: 40 }}>
+      <SectionHeader title="Path from Your Current Role" />
+      
+      <View style={[commonStyles.card, { padding: 24, paddingVertical: 32 }]}>
+        
+        {steps.map((step, index) => {
+          const isLast = index === steps.length - 1;
+          const isCompleted = step.status === "completed";
+          const isGoal = step.status === "goal";
+          
+          return (
+            <View key={index} style={{ flexDirection: "row", marginBottom: isLast ? 0 : 36 }}>
+              {/* Timeline Column */}
+              <View style={{ alignItems: "center", width: 40, marginRight: 20 }}>
+                {/* Connecting Line (drawn first so it goes under the node) */}
+                {!isLast && (
+                  <View style={{
+                    position: "absolute",
+                    top: 16,
+                    bottom: -36,
+                    width: 3,
+                    backgroundColor: isCompleted ? "#FACC15" : (theme.mode === "dark" ? "#334155" : "#E2E8F0"),
+                    zIndex: 0
+                  }} />
+                )}
+
+                {/* Node */}
+                <View style={{
+                  width: 36, height: 36, borderRadius: 18, 
+                  backgroundColor: isCompleted ? "#FACC15" : (theme.mode === "dark" ? "#111827" : "#0F172A"),
+                  justifyContent: "center", alignItems: "center",
+                  shadowColor: isCompleted ? "#FACC15" : "transparent",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: isCompleted ? 0.6 : 0,
+                  shadowRadius: 12,
+                  elevation: isCompleted ? 4 : 0,
+                  borderWidth: isCompleted ? 0 : 4,
+                  borderColor: isCompleted ? "transparent" : (theme.mode === "dark" ? "#1E293B" : "#334155"),
+                  zIndex: 1
+                }}>
+                  {isCompleted && <Check size={18} color="#111827" strokeWidth={3} />}
+                  {isGoal && <Award size={18} color="#FACC15" strokeWidth={2.5} />}
+                  {!isCompleted && !isGoal && (
+                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: theme.mode === "dark" ? "#475569" : "#94A3B8" }} />
+                  )}
+                </View>
+              </View>
+              
+              {/* Content Column */}
+              <View style={{ flex: 1, justifyContent: "center" }}>
+                <Text style={{ 
+                  fontFamily: isCompleted || isGoal ? theme.fonts.bold : theme.fonts.medium, 
+                  fontWeight: isCompleted || isGoal ? "bold" : "500",
+                  fontSize: 16, 
+                  color: isCompleted || isGoal ? theme.text : theme.textSecondary 
+                }}>
+                  {step.title}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+
+        <View style={{ marginTop: 32, alignItems: "center" }}>
+          <Button
+            title="View Details"
+            variant="primary"
+            onPress={() => router.push("/career-pathways/path-details")}
+            style={{ width: "100%" }}
+          />
+        </View>
       </View>
     </View>
   );
@@ -355,6 +443,7 @@ export default function CareerPathwaysMain() {
         </Pressable>
 
         <LockedRoadmapCard theme={theme} commonStyles={commonStyles} />
+        <PathTimelineCard theme={theme} commonStyles={commonStyles} />
       </Animated.ScrollView>
 
       <Modal

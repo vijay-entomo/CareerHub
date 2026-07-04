@@ -11,6 +11,7 @@ import Animated, {
 import { AppFonts } from '@/constants/theme';
 import { useTheme } from "@/hooks/use-theme";
 import { ChevronsRight, Check } from "lucide-react-native";
+import { BlurView } from "expo-blur";
 
 const BUTTON_HEIGHT = 70;
 const THUMB_SIZE = 58;
@@ -83,7 +84,7 @@ export const SwipeButton = ({ onComplete, title }: SwipeButtonProps) => {
   });
 
   return (
-    <View style={styles.container} onLayout={onLayout}>
+    <BlurView intensity={30} tint="light" style={styles.container} onLayout={onLayout}>
       <Animated.Text style={[styles.text, animatedTextStyle]}>
         {title}
       </Animated.Text>
@@ -91,7 +92,7 @@ export const SwipeButton = ({ onComplete, title }: SwipeButtonProps) => {
       <View style={styles.checkContainer}>
         <Check
           size={28}
-          color={theme.text}
+          color="#FFFFFF"
           strokeWidth={2.5}
         />
       </View>
@@ -101,7 +102,7 @@ export const SwipeButton = ({ onComplete, title }: SwipeButtonProps) => {
           <ChevronsRight size={28} color={theme.primaryForeground} />
         </Animated.View>
       </GestureDetector>
-    </View>
+    </BlurView>
   );
 };
 
@@ -110,8 +111,10 @@ const createStyles = (theme: any) =>
     container: {
       width: "100%",
       height: BUTTON_HEIGHT,
-      backgroundColor: theme.backgroundElement,
+      backgroundColor: "rgba(255, 255, 255, 0.15)",
       borderRadius: 999, // Pill shape
+      borderWidth: 1,
+      borderColor: "rgba(255, 255, 255, 0.2)",
       justifyContent: "center",
       paddingHorizontal: 6,
       overflow: "hidden",
@@ -119,7 +122,7 @@ const createStyles = (theme: any) =>
     text: {
       fontFamily: theme.fonts.bold,
       fontSize: 18,
-      color: theme.text,
+      color: "#FFFFFF",
       position: "absolute",
       alignSelf: "center",
       zIndex: 1,
@@ -130,7 +133,7 @@ const createStyles = (theme: any) =>
       width: THUMB_SIZE,
       height: THUMB_SIZE,
       borderRadius: THUMB_SIZE / 2,
-      backgroundColor: theme.backgroundElement,
+      backgroundColor: "transparent",
       justifyContent: "center",
       alignItems: "center",
       zIndex: 0,

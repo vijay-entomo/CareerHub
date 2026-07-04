@@ -51,15 +51,16 @@ export function Button({
   const theme = useTheme();
 
   const getBackgroundColor = (pressed: boolean) => {
-    if (disabled)
+    if (disabled) {
       return theme.mode === "dark"
         ? "rgba(255,255,255,0.1)"
         : "rgba(0,0,0,0.1)";
+    }
+
     switch (variant) {
-      // case "primary":
-      //   return pressed ? theme.primary + "E6" : theme.primary;
       case "primary":
-        return pressed ? "#00d5ff" : "#00d5ff";
+        // return pressed ? theme.primary + "E6" : theme.primary;
+        return pressed ? "#ff0000" : "#ff0000";
       case "secondary":
         return pressed
           ? theme.mode === "dark"
@@ -69,6 +70,7 @@ export function Button({
             ? "#2A2A2A"
             : "#F2F2F2";
       case "outline":
+      case "ghost":
         return pressed
           ? theme.mode === "dark"
             ? "rgba(255,255,255,0.05)"
@@ -76,12 +78,6 @@ export function Button({
           : "transparent";
       case "contrast":
         return pressed ? theme.text + "E6" : theme.text;
-      case "ghost":
-        return pressed
-          ? theme.mode === "dark"
-            ? "rgba(255,255,255,0.05)"
-            : "rgba(0,0,0,0.05)"
-          : "transparent";
       default:
         return theme.primary;
     }
@@ -91,61 +87,32 @@ export function Button({
     if (disabled) return theme.textSecondary;
     switch (variant) {
       case "primary":
-        return getContrastColor(theme.primary);
       case "secondary":
-        return theme.text;
+      case "contrast":
+        return getContrastColor(getBackgroundColor(false));
       case "outline":
-        return theme.text;
       case "ghost":
         return theme.text;
-      case "contrast":
-        return theme.background;
       default:
-        return getContrastColor(theme.primary);
+        return getContrastColor(getBackgroundColor(false));
     }
   };
 
-  const getBorderColor = () => {
-    if (disabled && variant === "outline") return theme.border;
-    if (variant === "outline") return theme.border;
-    if (variant === "secondary") return theme.text;
-    return "transparent";
-  };
+  const height = size === "small" ? 40 : size === "large" ? 64 : 56;
+  const fontSize = size === "small" ? 14 : size === "large" ? 18 : 16;
+  const borderRadius = shape === "square" ? 0 : shape === "rounded" ? 12 : 999;
+  const textColor = getTextColor();
+  const borderColor = variant === "outline" ? theme.border : "transparent";
+  const borderWidth = variant === "outline" ? 1 : 0;
+  const horizontalPadding = size === "small" ? 16 : 24;
 
-  const getHeight = () => {
-    switch (size) {
-      case "small":
-        return 40;
-      case "large":
-        return 64;
-      case "default":
-      default:
-        return 56;
-    }
-  };
-
-  const getFontSize = () => {
-    switch (size) {
-      case "small":
-        return 14;
-      case "large":
-        return 18;
-      case "default":
-      default:
-        return 16;
-    }
-  };
-
-  const getBorderRadius = () => {
-    switch (shape) {
-      case "square":
-        return 0;
-      case "rounded":
-        return 12;
-      case "pill":
-      default:
-        return 999;
-    }
+  const renderIcon = () => {
+    if (!icon) return null;
+    return React.isValidElement(icon) ? (
+      React.cloneElement(icon as React.ReactElement<any>, { color: textColor })
+    ) : (
+      <React.Fragment>{icon}</React.Fragment>
+    );
   };
 
   return (
@@ -154,15 +121,15 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         {
-          height: getHeight(),
+          height,
           backgroundColor: getBackgroundColor(pressed),
-          borderWidth: variant === "outline" ? 1 : 0,
-          borderColor: getBorderColor(),
-          borderRadius: getBorderRadius(),
+          borderWidth,
+          borderColor,
+          borderRadius,
           alignItems: "center",
           justifyContent: "center",
           flexDirection: "row",
-          paddingHorizontal: size === "small" ? 16 : 24,
+          paddingHorizontal: horizontalPadding,
           opacity:
             pressed && variant !== "primary" && variant !== "secondary"
               ? 0.7
@@ -173,19 +140,18 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={getTextColor()} />
+        <ActivityIndicator color={textColor} />
       ) : (
         <>
-          {icon && iconPosition === "left" && (
-            <React.Fragment>{icon}</React.Fragment>
-          )}
+          {iconPosition === "left" && renderIcon()}
+
           {title && (
             <Text
               style={[
                 {
-                  color: getTextColor(),
+                  color: textColor,
                   fontFamily: theme.fonts.semiBold,
-                  fontSize: getFontSize(),
+                  fontSize,
                   marginLeft: icon && iconPosition === "left" ? 8 : 0,
                   marginRight: icon && iconPosition === "right" ? 8 : 0,
                 },
@@ -195,9 +161,8 @@ export function Button({
               {title}
             </Text>
           )}
-          {icon && iconPosition === "right" && (
-            <React.Fragment>{icon}</React.Fragment>
-          )}
+
+          {iconPosition === "right" && renderIcon()}
         </>
       )}
     </Pressable>

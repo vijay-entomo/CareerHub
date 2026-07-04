@@ -101,7 +101,7 @@ const MENU_ITEMS = [
     title: "Interview Prep",
     subtitle: "Practice skills",
     icon: MonitorPlay,
-    route: "/interview",
+    route: "/interview/interview-main",
     color: "#7367F0", // Indigo
     metrics: [
       { label: "Mock Interviews", value: "4" },
@@ -113,7 +113,7 @@ const MENU_ITEMS = [
     title: "Resume",
     subtitle: "Build your CV",
     icon: FileText,
-    route: "/resume",
+    route: "/resume/resume-main",
     color: "#FFB400", // Yellow
     metrics: [
       { label: "Versions", value: "3" },

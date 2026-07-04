@@ -105,7 +105,7 @@ export default function Index() {
   const blob1Style = useAnimatedStyle(() => {
     const rotate = interpolate(
       scrollX.value,
-      [0, width, width * 2],
+      [-width, 0, width],
       [60, 0, -60],
       "clamp",
     );
@@ -115,7 +115,7 @@ export default function Index() {
   const blob2Style = useAnimatedStyle(() => {
     const rotate = interpolate(
       scrollX.value,
-      [width, width * 2, width * 3],
+      [0, width, width * 2],
       [60, 0, -60],
       "clamp",
     );
@@ -125,7 +125,7 @@ export default function Index() {
   const blob3Style = useAnimatedStyle(() => {
     const rotate = interpolate(
       scrollX.value,
-      [width * 2, width * 3, width * 4],
+      [width, width * 2, width * 3],
       [60, 0, -60],
       "clamp",
     );
@@ -138,7 +138,7 @@ export default function Index() {
       <MotiView
         style={StyleSheet.absoluteFillObject}
         animate={{
-          backgroundColor: activeIndex === 0 ? "#7C5DF9" : "#0F0F0F",
+          backgroundColor: "#0F0F0F",
         }}
         transition={{ type: "timing", duration: 400 }}
       />
@@ -150,14 +150,6 @@ export default function Index() {
             style={[
               styles.dot,
               activeIndex === 0
-                ? [styles.dotActive, { backgroundColor: "#FFFFFF" }]
-                : styles.dotInactive,
-            ]}
-          />
-          <View
-            style={[
-              styles.dot,
-              activeIndex === 1
                 ? [styles.dotActive, { backgroundColor: "#00E676" }]
                 : styles.dotInactive,
             ]}
@@ -165,7 +157,7 @@ export default function Index() {
           <View
             style={[
               styles.dot,
-              activeIndex === 2
+              activeIndex === 1
                 ? [styles.dotActive, { backgroundColor: "#FF4081" }]
                 : styles.dotInactive,
             ]}
@@ -173,7 +165,7 @@ export default function Index() {
           <View
             style={[
               styles.dot,
-              activeIndex === 3
+              activeIndex === 2
                 ? [styles.dotActive, { backgroundColor: "#FF7043" }]
                 : styles.dotInactive,
             ]}
@@ -193,179 +185,7 @@ export default function Index() {
           // @ts-ignore - Web specific scroll snapping
           style={{ flex: 1, scrollSnapType: "x mandatory" }}
         >
-          {/* SLIDE 1 */}
-          {/* @ts-ignore */}
-          <View
-            style={[
-              styles.slideContainer,
-              { scrollSnapAlign: "center", scrollSnapStop: "always" },
-            ]}
-          >
-            <ScrollView
-              contentContainerStyle={{
-                flexGrow: 1,
-                overflow: "hidden",
-                paddingBottom: 120,
-              }}
-              bounces={false}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.content}>
-                <View style={styles.textStack}>
-                  <FloatingBadge
-                    label="Learning"
-                    bgColor="#D7FE03"
-                    textColor="#1A1A1A"
-                    top={-30}
-                    right={20}
-                    rotate="15deg"
-                    delay={200}
-                    isVisible={activeIndex === 0}
-                  />
-                  <MotiView
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 100 }}
-                  >
-                    <Text style={styles.hugeText}>Build,</Text>
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 200 }}
-                    style={{ position: "relative" }}
-                  >
-                    <Text style={styles.hugeText}>prep,</Text>
-                    <MotiView
-                      from={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 600 }}
-                      style={[
-                        styles.decoration,
-                        {
-                          top: -20,
-                          right: -40,
-                          transform: [{ rotate: "15deg" }],
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 90,
-                          color: "#F785C0",
-                        }}
-                      >
-                        ✿
-                      </Text>
-                    </MotiView>
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 300 }}
-                    style={styles.highlightWrapper}
-                  >
-                    <View style={styles.highlightBackground} />
-                    <Text style={[styles.hugeText, styles.darkText]}>
-                      succeed.
-                    </Text>
-                    <FloatingBadge
-                      label="Jobs"
-                      bgColor="#3544D1"
-                      textColor="#FFFFFF"
-                      top={40}
-                      right={-30}
-                      rotate="-15deg"
-                      delay={300}
-                      isVisible={activeIndex === 0}
-                    />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 400 }}
-                    style={{ position: "relative" }}
-                  >
-                    <Text style={[styles.hugeText, { marginLeft: 100 }]}>
-                      Own
-                    </Text>
-                    <MotiView
-                      from={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 700 }}
-                      style={[styles.decoration, { top: -10, left: 10 }]}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 80,
-                          color: "#D7FE03",
-                        }}
-                      >
-                        ✴
-                      </Text>
-                    </MotiView>
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 500 }}
-                    style={{ position: "relative" }}
-                  >
-                    <Text style={styles.hugeText}>your</Text>
-                    <FloatingBadge
-                      label="Career Path"
-                      bgColor="#1A1A1A"
-                      textColor="#FFFFFF"
-                      top={10}
-                      right={-10}
-                      rotate="-5deg"
-                      delay={400}
-                      isVisible={activeIndex === 0}
-                    />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 600 }}
-                    style={{ position: "relative" }}
-                  >
-                    <Text style={styles.hugeText}>career</Text>
-                    <FloatingBadge
-                      label="Master Profile"
-                      bgColor="#D7FE03"
-                      textColor="#1A1A1A"
-                      top={30}
-                      right={0}
-                      rotate="-15deg"
-                      delay={500}
-                      isVisible={activeIndex === 0}
-                    />
-                  </MotiView>
-                  <MotiView
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: 700 }}
-                    style={{ position: "relative" }}
-                  >
-                    <Text style={styles.hugeText}>journey.</Text>
-                    <MotiView
-                      from={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 800 }}
-                      style={[styles.decoration, { bottom: -40, right: 20 }]}
-                    >
-                      <Svg width="56" height="56" viewBox="0 0 32 32">
-                        <Path
-                          fill="#FFFFFF"
-                          d="m29.707 24.293c-.391-.391-1.023-.391-1.414 0l-2.293 2.293v-1.586c0-6.182-2.22-13.214-8.141-15.341-2.377-4.431-8.217-7.659-14.859-7.659-.552 0-1 .447-1 1s.448 1 1 1c4.983 0 9.545 2.091 12.032 5.064-4.049-.328-6.032 2.34-6.032 4.936 0 2.757 2.243 5 5 5 2.673 0 5.655-2.228 4.831-6.607 3.73 2.473 5.169 7.832 5.169 12.607v1.586l-2.293-2.293c-.391-.391-1.023-.391-1.414 0s-.391 1.023 0 1.414l4 4c.391.391 1.023.391 1.414 0l4-4c.391-.391.391-1.023 0-1.414zm-15.707-7.293c-1.654 0-3-1.346-3-3 0-1.639 1.292-3.788 5.428-2.688 1.483 3.518-.208 5.688-2.428 5.688z"
-                        />
-                      </Svg>
-                    </MotiView>
-                  </MotiView>
-                </View>
-              </View>
-            </ScrollView>
-          </View>
+
 
           {/* SLIDE 2: Learning (Green/Purple) */}
           {/* @ts-ignore */}
@@ -404,7 +224,7 @@ export default function Index() {
                   right={40}
                   rotate="10deg"
                   delay={400}
-                  isVisible={activeIndex === 1}
+                  isVisible={activeIndex === 0}
                 />
                 <FloatingBadge
                   label="Grow"
@@ -414,7 +234,27 @@ export default function Index() {
                   left={20}
                   rotate="-15deg"
                   delay={500}
-                  isVisible={activeIndex === 1}
+                  isVisible={activeIndex === 0}
+                />
+                <FloatingBadge
+                  label="Explore"
+                  bgColor="#D7FE03"
+                  textColor="#000"
+                  top={40}
+                  left={-10}
+                  rotate="-10deg"
+                  delay={600}
+                  isVisible={activeIndex === 0}
+                />
+                <FloatingBadge
+                  label="Master"
+                  bgColor="#FCE4EC"
+                  textColor="#000"
+                  bottom={40}
+                  right={-10}
+                  rotate="15deg"
+                  delay={700}
+                  isVisible={activeIndex === 0}
                 />
                 <Text style={[styles.starIcon, { top: 10, left: 20 }]}>✦</Text>
                 <Text
@@ -480,7 +320,7 @@ export default function Index() {
                   right={50}
                   rotate="-10deg"
                   delay={400}
-                  isVisible={activeIndex === 2}
+                  isVisible={activeIndex === 1}
                 />
                 <FloatingBadge
                   label="Connect"
@@ -490,7 +330,27 @@ export default function Index() {
                   left={0}
                   rotate="15deg"
                   delay={500}
-                  isVisible={activeIndex === 2}
+                  isVisible={activeIndex === 1}
+                />
+                <FloatingBadge
+                  label="Network"
+                  bgColor="#D7FE03"
+                  textColor="#000"
+                  top={60}
+                  left={10}
+                  rotate="10deg"
+                  delay={600}
+                  isVisible={activeIndex === 1}
+                />
+                <FloatingBadge
+                  label="Inspire"
+                  bgColor="#E0F2F1"
+                  textColor="#000"
+                  bottom={10}
+                  right={10}
+                  rotate="-5deg"
+                  delay={700}
+                  isVisible={activeIndex === 1}
                 />
                 <Text
                   style={[styles.starIcon, { top: 0, left: 10, fontSize: 32 }]}
@@ -555,7 +415,7 @@ export default function Index() {
                   right={20}
                   rotate="20deg"
                   delay={400}
-                  isVisible={activeIndex === 3}
+                  isVisible={activeIndex === 2}
                 />
                 <FloatingBadge
                   label="Hired"
@@ -565,7 +425,27 @@ export default function Index() {
                   left={-10}
                   rotate="-20deg"
                   delay={500}
-                  isVisible={activeIndex === 3}
+                  isVisible={activeIndex === 2}
+                />
+                <FloatingBadge
+                  label="Interview"
+                  bgColor="#E0F2F1"
+                  textColor="#000"
+                  top={10}
+                  left={30}
+                  rotate="-10deg"
+                  delay={600}
+                  isVisible={activeIndex === 2}
+                />
+                <FloatingBadge
+                  label="Offer"
+                  bgColor="#D7FE03"
+                  textColor="#000"
+                  bottom={20}
+                  right={40}
+                  rotate="15deg"
+                  delay={700}
+                  isVisible={activeIndex === 2}
                 />
                 <Text
                   style={[
@@ -604,18 +484,10 @@ export default function Index() {
               onComplete={() => router.push("/login")}
             />
             <View style={styles.signupContainer}>
-              <Text
-                style={[
-                  styles.signupText,
-                  { color: activeIndex === 0 ? "#FFFFFF" : "#FFF" },
-                ]}
-              >
+              <Text style={[styles.signupText, { color: "#FFF" }]}>
                 New to the platform?{" "}
                 <Text
-                  style={[
-                    styles.signupLink,
-                    { color: activeIndex === 0 ? "#FFFFFF" : "#FFF" },
-                  ]}
+                  style={[styles.signupLink, { color: "#FFF" }]}
                   onPress={() => router.push("/signup")}
                 >
                   Create an account

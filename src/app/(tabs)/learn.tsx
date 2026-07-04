@@ -1,4 +1,5 @@
 import { AutoContrastIcon } from "@/components/AutoContrast";
+import { Button } from "@/components/Button";
 import { CourseCard } from "@/components/CourseCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useCommonStyles } from "@/hooks/use-common-styles";
@@ -36,7 +37,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { Button } from "@/components/Button";
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -516,7 +516,8 @@ export default function Learn() {
                   <View style={styles.heroActionRow}>
                     <Button
                       title="View Course"
-                      variant="secondary"
+                      variant="primary"
+                      size="small"
                       onPress={() => {}}
                     />
                   </View>

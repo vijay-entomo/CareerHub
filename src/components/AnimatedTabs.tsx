@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useTheme } from "../hooks/use-theme";
@@ -27,20 +28,16 @@ interface AnimatedTabsProps {
   onTabChange: (tabId: string) => void;
 }
 
-const AnimatedTabItem = ({ tab, isActive, count, onPress, onLayout }: any) => {
+const AnimatedTabItem = ({ tab, isActive, isFirst, isLast, count, onPress, onLayout }: any) => {
   const theme = useTheme();
   const styles = createStyles(theme);
-  const activeOpacity = useAnimatedStyle(() => {
-    return {
-      opacity: withTiming(isActive ? 1 : 0, { duration: 200 }),
-    };
-  });
 
-  const inactiveOpacity = useAnimatedStyle(() => {
-    return {
-      opacity: withTiming(isActive ? 0 : 1, { duration: 200 }),
-    };
-  });
+  const radiusStyle = {
+    borderTopLeftRadius: isFirst ? 24 : 12,
+    borderBottomLeftRadius: isFirst ? 24 : 12,
+    borderTopRightRadius: isLast ? 24 : 12,
+    borderBottomRightRadius: isLast ? 24 : 12,
+  };
 
   const Icon = tab.icon;
 
@@ -48,29 +45,8 @@ const AnimatedTabItem = ({ tab, isActive, count, onPress, onLayout }: any) => {
     <Pressable
       onLayout={onLayout}
       onPress={onPress}
-      style={styles.tabItemContainer}
+      style={[styles.tabItemContainer, { zIndex: 2 }]}
     >
-      {/* Inactive Background */}
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill as any,
-          styles.tabBg,
-          { backgroundColor: theme.backgroundElement },
-          inactiveOpacity,
-        ]}
-        pointerEvents="none"
-      />
-
-      {/* Active Background */}
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill as any,
-          styles.tabBg,
-          { backgroundColor: theme.primary },
-          activeOpacity,
-        ]}
-        pointerEvents="none"
-      />
 
       {isActive ? (
         <>
@@ -153,6 +129,34 @@ export function AnimatedTabs({
     }
   };
 
+  const activeMeasurement = tabMeasurements[activeTab];
+  const activeIndex = tabs.findIndex((t) => t.id === activeTab);
+
+  const indicatorStyle = useAnimatedStyle(() => {
+    if (!activeMeasurement) return { opacity: 0 };
+    
+    // Bouncy spring for a playful, premium feel (user preferred)
+    const springConfig = { damping: 20, stiffness: 200, mass: 1 };
+    
+    return {
+      opacity: withTiming(1, { duration: 200 }),
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      left: 0,
+      zIndex: 1,
+      backgroundColor: theme.primary,
+      width: withSpring(activeMeasurement.width, springConfig),
+      transform: [
+        { translateX: withSpring(activeMeasurement.x, springConfig) },
+      ],
+      borderTopLeftRadius: withSpring(activeIndex === 0 ? 24 : 12, springConfig),
+      borderBottomLeftRadius: withSpring(activeIndex === 0 ? 24 : 12, springConfig),
+      borderTopRightRadius: withSpring(activeIndex === tabs.length - 1 ? 24 : 12, springConfig),
+      borderBottomRightRadius: withSpring(activeIndex === tabs.length - 1 ? 24 : 12, springConfig),
+    };
+  });
+
   return (
     <ScrollView
       ref={tabScrollRef}
@@ -164,13 +168,48 @@ export function AnimatedTabs({
       <View style={styles.tabsRelative}>
         {/* The individual tabs */}
         <View style={styles.tabsLayoutRow}>
-          {tabs.map((tab) => {
+          {/* Static Inactive Backgrounds */}
+          {tabs.map((tab, index) => {
+            const m = tabMeasurements[tab.id];
+            if (!m) return null;
+            return (
+              <View
+                key={`bg-${tab.id}`}
+                style={[
+                  {
+                    position: "absolute",
+                    left: m.x,
+                    top: 0,
+                    bottom: 0,
+                    width: m.width,
+                    backgroundColor: theme.backgroundElement,
+                    zIndex: 0,
+                  },
+                  {
+                    borderTopLeftRadius: index === 0 ? 24 : 12,
+                    borderBottomLeftRadius: index === 0 ? 24 : 12,
+                    borderTopRightRadius: index === tabs.length - 1 ? 24 : 12,
+                    borderBottomRightRadius: index === tabs.length - 1 ? 24 : 12,
+                  }
+                ]}
+              />
+            );
+          })}
+
+          {/* Sliding Indicator */}
+          <Animated.View style={indicatorStyle} pointerEvents="none" />
+          
+          {tabs.map((tab, index) => {
             const isActive = activeTab === tab.id;
+            const isFirst = index === 0;
+            const isLast = index === tabs.length - 1;
             return (
               <AnimatedTabItem
                 key={tab.id}
                 tab={tab}
                 isActive={isActive}
+                isFirst={isFirst}
+                isLast={isLast}
                 count={tab.count}
                 onLayout={(e: any) => {
                   const { x, width } = e.nativeEvent.layout;
@@ -218,7 +257,6 @@ const createStyles = (theme: any) =>
       zIndex: 2,
     },
     tabBg: {
-      borderRadius: 100,
       zIndex: -1,
     },
 

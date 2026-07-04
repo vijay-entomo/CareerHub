@@ -5,7 +5,7 @@ import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
-import { Bell, Heart } from "lucide-react-native";
+import { ArrowUpRight, Bell, Heart } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -33,7 +33,15 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Defs, LinearGradient, Rect, Stop, Pattern, Path, Circle } from "react-native-svg";
+import Svg, {
+  Circle,
+  Defs,
+  LinearGradient,
+  Path,
+  Pattern,
+  Rect,
+  Stop,
+} from "react-native-svg";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width - 48; // Leaves 20px padding on each side
@@ -42,21 +50,42 @@ const BANNER_DATA = [
   {
     id: 1,
     title: "Not to be dramatic but... doing this could change your life",
-    subtitle: "Set up your Master Profile to auto-fill all your career documents with one click.",
+    subtitle:
+      "Set up your Master Profile to auto-fill all your career documents with one click.",
     buttonText: "Complete Profile",
     bgColor: "#FFEB00", // Premium Neon Lime
     textColor: "#1A1A1A",
     bgIllustration: (theme: any, item: any) => (
-      <View style={[StyleSheet.absoluteFill, { overflow: "hidden", borderRadius: 36, zIndex: -1 }]}>
-        <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: theme.mode === "dark" ? 0.4 : 0.15 }}>
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { overflow: "hidden", borderRadius: 36, zIndex: -1 },
+        ]}
+      >
+        <Svg
+          height="100%"
+          width="100%"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          style={{ opacity: theme.mode === "dark" ? 0.4 : 0.15 }}
+        >
           <Defs>
             <LinearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={item.textColor} stopOpacity="1" />
               <Stop offset="1" stopColor={item.textColor} stopOpacity="0" />
             </LinearGradient>
           </Defs>
-          <Path d="M0 100 L0 85 Q 25 80, 40 50 T 80 25 T 100 5 L100 100 Z" fill="url(#grad1)" />
-          <Path d="M0 85 Q 25 80, 40 50 T 80 25 T 100 5" fill="none" stroke={item.textColor} strokeWidth="4" vectorEffect="non-scaling-stroke" />
+          <Path
+            d="M0 100 L0 85 Q 25 80, 40 50 T 80 25 T 100 5 L100 100 Z"
+            fill="url(#grad1)"
+          />
+          <Path
+            d="M0 85 Q 25 80, 40 50 T 80 25 T 100 5"
+            fill="none"
+            stroke={item.textColor}
+            strokeWidth="4"
+            vectorEffect="non-scaling-stroke"
+          />
         </Svg>
       </View>
     ),
@@ -64,25 +93,84 @@ const BANNER_DATA = [
   {
     id: 2,
     title: "Better profiles lead to better outcomes",
-    subtitle: "Set up your Master Profile to unlock accurate recommendations and Personalised guidance",
+    subtitle:
+      "Set up your Master Profile to unlock accurate recommendations and Personalised guidance",
     buttonText: "Complete Profile",
     bgColor: "#F72798", // Lavender
     textColor: "#FFFFFF",
     bgIllustration: (theme: any, item: any) => (
-      <View style={[StyleSheet.absoluteFill, { overflow: "hidden", borderRadius: 36, zIndex: -1 }]}>
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { overflow: "hidden", borderRadius: 36, zIndex: -1 },
+        ]}
+      >
         <Svg height="100%" width="100%">
           <Defs>
-            <LinearGradient id="radarFade" x1="0%" y1="0%" x2="100%" y2="100%" gradientUnits="userSpaceOnUse">
-              <Stop offset="0" stopColor={item.textColor} stopOpacity={theme.mode === "dark" ? "0.6" : "0.3"} />
+            <LinearGradient
+              id="radarFade"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop
+                offset="0"
+                stopColor={item.textColor}
+                stopOpacity={theme.mode === "dark" ? "0.6" : "0.3"}
+              />
               <Stop offset="0.8" stopColor={item.textColor} stopOpacity="0" />
             </LinearGradient>
           </Defs>
-          <Circle cx="0" cy="0" r="80" stroke="url(#radarFade)" strokeWidth="1.5" fill="none" />
-          <Circle cx="0" cy="0" r="160" stroke="url(#radarFade)" strokeWidth="1.5" fill="none" />
-          <Circle cx="0" cy="0" r="240" stroke="url(#radarFade)" strokeWidth="1.5" fill="none" />
-          <Circle cx="0" cy="0" r="320" stroke="url(#radarFade)" strokeWidth="1.5" fill="none" />
-          <Circle cx="0" cy="0" r="400" stroke="url(#radarFade)" strokeWidth="1.5" fill="none" />
-          <Circle cx="0" cy="0" r="480" stroke="url(#radarFade)" strokeWidth="1.5" fill="none" />
+          <Circle
+            cx="0"
+            cy="0"
+            r="80"
+            stroke="url(#radarFade)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <Circle
+            cx="0"
+            cy="0"
+            r="160"
+            stroke="url(#radarFade)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <Circle
+            cx="0"
+            cy="0"
+            r="240"
+            stroke="url(#radarFade)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <Circle
+            cx="0"
+            cy="0"
+            r="320"
+            stroke="url(#radarFade)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <Circle
+            cx="0"
+            cy="0"
+            r="400"
+            stroke="url(#radarFade)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <Circle
+            cx="0"
+            cy="0"
+            r="480"
+            stroke="url(#radarFade)"
+            strokeWidth="1.5"
+            fill="none"
+          />
         </Svg>
       </View>
     ),
@@ -90,27 +178,81 @@ const BANNER_DATA = [
   {
     id: 3,
     title: "Opportunities don't wait, and neither should you",
-    subtitle: "Start your job search early to discover roles tailored for you and stay ahead",
+    subtitle:
+      "Start your job search early to discover roles tailored for you and stay ahead",
     buttonText: "Explore Jobs",
     bgColor: "#793FDF", // Royal Navy
     textColor: "#FFFFFF",
     bgIllustration: (theme: any, item: any) => (
-      <View style={[StyleSheet.absoluteFill, { overflow: "hidden", borderRadius: 36, zIndex: -1 }]}>
-        <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { overflow: "hidden", borderRadius: 36, zIndex: -1 },
+        ]}
+      >
+        <Svg
+          height="100%"
+          width="100%"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+        >
           <Defs>
-            <LinearGradient id="waveFade" x1="100%" y1="0%" x2="0%" y2="100%" gradientUnits="userSpaceOnUse">
-              <Stop offset="0" stopColor={item.textColor} stopOpacity={theme.mode === "dark" ? "0.5" : "0.3"} />
+            <LinearGradient
+              id="waveFade"
+              x1="100%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop
+                offset="0"
+                stopColor={item.textColor}
+                stopOpacity={theme.mode === "dark" ? "0.5" : "0.3"}
+              />
               <Stop offset="1" stopColor={item.textColor} stopOpacity="0" />
             </LinearGradient>
-            <LinearGradient id="waveFill" x1="100%" y1="0%" x2="0%" y2="100%" gradientUnits="userSpaceOnUse">
-              <Stop offset="0" stopColor={item.textColor} stopOpacity={theme.mode === "dark" ? "0.2" : "0.1"} />
+            <LinearGradient
+              id="waveFill"
+              x1="100%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop
+                offset="0"
+                stopColor={item.textColor}
+                stopOpacity={theme.mode === "dark" ? "0.2" : "0.1"}
+              />
               <Stop offset="1" stopColor={item.textColor} stopOpacity="0" />
             </LinearGradient>
           </Defs>
-          <Path d="M 100,0 L 100,80 Q 60,80 40,30 Q 20,-10 -20,0 L -20,-10 Z" fill="url(#waveFill)" />
-          <Path d="M 100,80 Q 60,80 40,30 Q 20,-10 -20,0" fill="none" stroke="url(#waveFade)" strokeWidth="4" vectorEffect="non-scaling-stroke" />
-          <Path d="M 100,60 Q 65,60 45,20 Q 30,-15 -10,0" fill="none" stroke="url(#waveFade)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-          <Path d="M 100,40 Q 70,40 50,10 Q 40,-20 0,0" fill="none" stroke="url(#waveFade)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          <Path
+            d="M 100,0 L 100,80 Q 60,80 40,30 Q 20,-10 -20,0 L -20,-10 Z"
+            fill="url(#waveFill)"
+          />
+          <Path
+            d="M 100,80 Q 60,80 40,30 Q 20,-10 -20,0"
+            fill="none"
+            stroke="url(#waveFade)"
+            strokeWidth="4"
+            vectorEffect="non-scaling-stroke"
+          />
+          <Path
+            d="M 100,60 Q 65,60 45,20 Q 30,-15 -10,0"
+            fill="none"
+            stroke="url(#waveFade)"
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+          <Path
+            d="M 100,40 Q 70,40 50,10 Q 40,-20 0,0"
+            fill="none"
+            stroke="url(#waveFade)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
         </Svg>
       </View>
     ),
@@ -123,25 +265,88 @@ const BANNER_DATA = [
     bgColor: "#F45B26", // Bright Orange
     textColor: "#FFFFFF",
     bgIllustration: (theme: any, item: any) => (
-      <View style={[StyleSheet.absoluteFill, { overflow: "hidden", borderRadius: 36, zIndex: -1 }]}>
-        <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { overflow: "hidden", borderRadius: 36, zIndex: -1 },
+        ]}
+      >
+        <Svg
+          height="100%"
+          width="100%"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+        >
           <Defs>
-            <LinearGradient id="trendFade" x1="0%" y1="100%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+            <LinearGradient
+              id="trendFade"
+              x1="0%"
+              y1="100%"
+              x2="100%"
+              y2="0%"
+              gradientUnits="userSpaceOnUse"
+            >
               <Stop offset="0" stopColor={item.textColor} stopOpacity="0" />
-              <Stop offset="0.5" stopColor={item.textColor} stopOpacity={theme.mode === "dark" ? "0.2" : "0.08"} />
-              <Stop offset="1" stopColor={item.textColor} stopOpacity={theme.mode === "dark" ? "0.4" : "0.15"} />
+              <Stop
+                offset="0.5"
+                stopColor={item.textColor}
+                stopOpacity={theme.mode === "dark" ? "0.2" : "0.08"}
+              />
+              <Stop
+                offset="1"
+                stopColor={item.textColor}
+                stopOpacity={theme.mode === "dark" ? "0.4" : "0.15"}
+              />
             </LinearGradient>
-            <LinearGradient id="trendFill" x1="0%" y1="100%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+            <LinearGradient
+              id="trendFill"
+              x1="0%"
+              y1="100%"
+              x2="100%"
+              y2="0%"
+              gradientUnits="userSpaceOnUse"
+            >
               <Stop offset="0" stopColor={item.textColor} stopOpacity="0" />
-              <Stop offset="1" stopColor={item.textColor} stopOpacity={theme.mode === "dark" ? "0.15" : "0.05"} />
+              <Stop
+                offset="1"
+                stopColor={item.textColor}
+                stopOpacity={theme.mode === "dark" ? "0.15" : "0.05"}
+              />
             </LinearGradient>
           </Defs>
-          <Path d="M-10,110 L10,80 L30,85 L50,60 L70,70 L110,20 L110,110 Z" fill="url(#trendFill)" />
-          <Path d="M-10,110 L10,80 L30,85 L50,60 L70,70 L110,20" fill="none" stroke="url(#trendFade)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-          <Path d="M-10,110 L20,95 L40,100 L60,80 L80,85 L110,40 L110,110 Z" fill="url(#trendFill)" />
-          <Path d="M-10,110 L20,95 L40,100 L60,80 L80,85 L110,40" fill="none" stroke="url(#trendFade)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-          <Path d="M-10,110 L15,105 L35,108 L55,95 L75,98 L110,60 L110,110 Z" fill="url(#trendFill)" />
-          <Path d="M-10,110 L15,105 L35,108 L55,95 L75,98 L110,60" fill="none" stroke="url(#trendFade)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          <Path
+            d="M-10,110 L10,80 L30,85 L50,60 L70,70 L110,20 L110,110 Z"
+            fill="url(#trendFill)"
+          />
+          <Path
+            d="M-10,110 L10,80 L30,85 L50,60 L70,70 L110,20"
+            fill="none"
+            stroke="url(#trendFade)"
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+          <Path
+            d="M-10,110 L20,95 L40,100 L60,80 L80,85 L110,40 L110,110 Z"
+            fill="url(#trendFill)"
+          />
+          <Path
+            d="M-10,110 L20,95 L40,100 L60,80 L80,85 L110,40"
+            fill="none"
+            stroke="url(#trendFade)"
+            strokeWidth="3"
+            vectorEffect="non-scaling-stroke"
+          />
+          <Path
+            d="M-10,110 L15,105 L35,108 L55,95 L75,98 L110,60 L110,110 Z"
+            fill="url(#trendFill)"
+          />
+          <Path
+            d="M-10,110 L15,105 L35,108 L55,95 L75,98 L110,60"
+            fill="none"
+            stroke="url(#trendFade)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
         </Svg>
       </View>
     ),
@@ -149,28 +354,50 @@ const BANNER_DATA = [
   {
     id: 5,
     title: "From where you are to where you want to be",
-    subtitle: "Discover your ideal career path and the skills needed to reach your goals",
+    subtitle:
+      "Discover your ideal career path and the skills needed to reach your goals",
     buttonText: "Explore Career Path",
     bgColor: "#08CB00", // Mint Cyan
     textColor: "#FFFFFF",
     bgIllustration: (theme: any, item: any) => (
-      <View style={[StyleSheet.absoluteFill, { overflow: "hidden", borderRadius: 36, zIndex: -1 }]}>
-        <Svg height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ opacity: theme.mode === "dark" ? 0.4 : 0.15 }}>
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { overflow: "hidden", borderRadius: 36, zIndex: -1 },
+        ]}
+      >
+        <Svg
+          height="100%"
+          width="100%"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          style={{ opacity: theme.mode === "dark" ? 0.4 : 0.15 }}
+        >
           <Defs>
             <LinearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={item.textColor} stopOpacity="1" />
               <Stop offset="1" stopColor={item.textColor} stopOpacity="0" />
             </LinearGradient>
           </Defs>
-          <Path d="M0 100 L0 85 Q 25 80, 40 50 T 80 25 T 100 5 L100 100 Z" fill="url(#grad2)" />
-          <Path d="M0 85 Q 25 80, 40 50 T 80 25 T 100 5" fill="none" stroke={item.textColor} strokeWidth="4" vectorEffect="non-scaling-stroke" />
+          <Path
+            d="M0 100 L0 85 Q 25 80, 40 50 T 80 25 T 100 5 L100 100 Z"
+            fill="url(#grad2)"
+          />
+          <Path
+            d="M0 85 Q 25 80, 40 50 T 80 25 T 100 5"
+            fill="none"
+            stroke={item.textColor}
+            strokeWidth="4"
+            vectorEffect="non-scaling-stroke"
+          />
         </Svg>
       </View>
     ),
   },
   {
     id: 6,
-    title: "In interviews, it's not the smartest who wins - it's the most prepared",
+    title:
+      "In interviews, it's not the smartest who wins - it's the most prepared",
     subtitle: "Practice with AI-powered interviews and boost your confidence",
     buttonText: "Start Interview Prep",
     bgColor: "#18181B", // Pitch Black
@@ -618,6 +845,127 @@ const PremiumAuroraBackground = ({ scrollX }: { scrollX: any }) => {
   );
 };
 
+const BannerCardItem = ({ item, theme, styles }: any) => {
+  const isDarkBanner = item.bgColor === "#1A1A1A";
+  const bannerBg = isDarkBanner ? theme.text : item.bgColor;
+  const bannerText = isDarkBanner ? theme.background : item.textColor;
+
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Pressable
+      onPress={() => {}}
+      onPressIn={() =>
+        (scale.value = withSpring(0.97, { damping: 15, stiffness: 200 }))
+      }
+      onPressOut={() =>
+        (scale.value = withSpring(1, { damping: 15, stiffness: 200 }))
+      }
+    >
+      <Animated.View
+        dataSet={{ class: "squircle-card" }}
+        style={[
+          styles.bannerCard,
+          { backgroundColor: bannerBg, marginRight: 16 },
+          // @ts-ignore
+          { scrollSnapAlign: "center", scrollSnapStop: "always" },
+          animatedStyle,
+        ]}
+      >
+        {item.bgIllustration ? (
+          item.bgIllustration(theme, item)
+        ) : (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { overflow: "hidden", borderRadius: 36, zIndex: -1 },
+            ]}
+          >
+            <Svg height="100%" width="100%">
+              <Defs>
+                <Pattern
+                  id={`grid-${item.id}`}
+                  width="64"
+                  height="64"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <Path
+                    d="M 64 0 L 0 0 0 64"
+                    fill="none"
+                    stroke={bannerText}
+                    strokeWidth="2"
+                    opacity={0.15}
+                  />
+                  <Path
+                    d="M -8 0 L 8 0 M 0 -8 L 0 8"
+                    fill="none"
+                    stroke={bannerText}
+                    strokeWidth="2.5"
+                    opacity={0.25}
+                  />
+                </Pattern>
+                <LinearGradient
+                  id={`fade-${item.id}`}
+                  x1="1"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <Stop offset="0" stopColor={bannerBg} stopOpacity="0" />
+                  <Stop offset="0.8" stopColor={bannerBg} stopOpacity="1" />
+                </LinearGradient>
+              </Defs>
+              <Rect width="100%" height="100%" fill={`url(#grid-${item.id})`} />
+              <Rect width="100%" height="100%" fill={`url(#fade-${item.id})`} />
+            </Svg>
+          </View>
+        )}
+
+        {/* Glassy Arrow Button */}
+        <BlurView
+          intensity={40}
+          tint={isDarkBanner ? "light" : "dark"}
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            zIndex: 2,
+            width: 32,
+            height: 32,
+            borderRadius: 22,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1.5,
+            borderColor: bannerText + "30",
+            overflow: "hidden",
+          }}
+        >
+          <ArrowUpRight size={18} color={bannerText} />
+        </BlurView>
+
+        <View style={{ flex: 1, justifyContent: "space-between" }}>
+          <View style={{ paddingRight: 56 }}>
+            <Text style={[styles.bannerTitle, { color: bannerText }]}>
+              {item.title}
+            </Text>
+            <Text
+              style={[
+                styles.bannerSubtitle,
+                { color: bannerText, opacity: 0.85 },
+              ]}
+            >
+              {item.subtitle}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
 export default function Home() {
   const theme = useTheme();
   const commonStyles = useCommonStyles();
@@ -758,7 +1106,7 @@ export default function Home() {
               {/* <HeaderIconButton onPress={() => {}}>
                 <Search size={22} color={theme.text} strokeWidth={2.5} />
               </HeaderIconButton> */}
-              <HeaderIconButton onPress={() => {}}>
+              <HeaderIconButton onPress={() => router.push("/notifications")}>
                 <Bell size={22} color={theme.text} strokeWidth={2.5} />
                 <View style={styles.notificationDot} />
               </HeaderIconButton>
@@ -799,71 +1147,11 @@ export default function Home() {
             }}
             contentContainerStyle={{
               paddingHorizontal: (width - CARD_WIDTH) / 2,
+              alignItems: "stretch",
             }}
-            renderItem={({ item }) => {
-              const isDarkBanner = item.bgColor === "#1A1A1A";
-              const bannerBg = isDarkBanner ? theme.text : item.bgColor;
-              const bannerText = isDarkBanner
-                ? theme.background
-                : item.textColor;
-
-              return (
-                <View
-                  dataSet={{ class: "squircle-card" }}
-                  style={[
-                    styles.bannerCard,
-                    { backgroundColor: bannerBg, marginRight: 16 },
-                    // @ts-ignore
-                    { scrollSnapAlign: "center", scrollSnapStop: "always" },
-                  ]}
-                >
-                  {item.bgIllustration ? item.bgIllustration(theme, item) : (
-                    /* SVG Blueprint Grid Background */
-                    <View style={[StyleSheet.absoluteFill, { overflow: "hidden", borderRadius: 36, zIndex: -1 }]}>
-                      <Svg height="100%" width="100%">
-                        <Defs>
-                          <Pattern id={`grid-${item.id}`} width="64" height="64" patternUnits="userSpaceOnUse">
-                            <Path d="M 64 0 L 0 0 0 64" fill="none" stroke={bannerText} strokeWidth="2" opacity={0.15} />
-                            <Path d="M -8 0 L 8 0 M 0 -8 L 0 8" fill="none" stroke={bannerText} strokeWidth="2.5" opacity={0.25} />
-                          </Pattern>
-                          <LinearGradient id={`fade-${item.id}`} x1="1" y1="0" x2="0" y2="1">
-                            <Stop offset="0" stopColor={bannerBg} stopOpacity="0" />
-                            <Stop offset="0.8" stopColor={bannerBg} stopOpacity="1" />
-                          </LinearGradient>
-                        </Defs>
-                        <Rect width="100%" height="100%" fill={`url(#grid-${item.id})`} />
-                        <Rect width="100%" height="100%" fill={`url(#fade-${item.id})`} />
-                      </Svg>
-                    </View>
-                  )}
-
-                  <View>
-                    <Text style={[styles.bannerTitle, { color: bannerText }]}>
-                      {item.title}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.bannerSubtitle,
-                        { color: bannerText, opacity: 0.85 },
-                      ]}
-                    >
-                      {item.subtitle}
-                    </Text>
-                  </View>
-                  <Button
-                    title={item.buttonText}
-                    size="small"
-                    style={{
-                      backgroundColor: bannerText,
-                      alignSelf: "flex-start",
-                      marginTop: "auto",
-                    }}
-                    textStyle={{ color: bannerBg }}
-                    onPress={() => {}}
-                  />
-                </View>
-              );
-            }}
+            renderItem={({ item }) => (
+              <BannerCardItem item={item} theme={theme} styles={styles} />
+            )}
           />
 
           {/* Pagination Dots */}
@@ -1244,7 +1532,8 @@ const createStyles = (theme: any) =>
     },
     bannerCard: {
       width: CARD_WIDTH,
-      height: 240,
+      minHeight: 120,
+      height: "100%",
       padding: 24,
       justifyContent: "space-between",
       borderRadius: 20,

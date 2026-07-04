@@ -23,9 +23,9 @@ import Animated, {
 import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { useTranslation } from "react-i18next";
+import { Button } from "../components/Button";
 import { Header } from "../components/Header";
 import { Toggle } from "../components/Toggle";
-import { Button } from "../components/Button";
 
 export default function ProfileSettings() {
   const theme = useTheme();
@@ -69,10 +69,10 @@ export default function ProfileSettings() {
 
           <Button
             title="Edit Profile"
-            variant="secondary"
+            variant="primary"
             size="small"
             onPress={() => router.push("/edit-profile")}
-            icon={<Edit2 size={16} color={theme.background} />}
+            icon={<Edit2 size={16} />}
           />
         </View>
 
@@ -143,17 +143,16 @@ export default function ProfileSettings() {
               { paddingVertical: 6, minHeight: 56 }, // offset Toggle's 44 minHeight
               pressed && { backgroundColor: "rgba(150,150,150,0.1)" },
             ]}
-            onPress={() => theme.setTheme(theme.mode === "dark" ? "light" : "dark")}
+            onPress={() =>
+              theme.setTheme(theme.mode === "dark" ? "light" : "dark")
+            }
           >
             <View style={styles.settingLeft}>
               <Moon size={20} color={theme.textSecondary} />
               <Text style={styles.settingText}>Dark Mode</Text>
             </View>
             <View pointerEvents="none">
-              <Toggle
-                value={theme.mode === "dark"}
-                onValueChange={() => {}}
-              />
+              <Toggle value={theme.mode === "dark"} onValueChange={() => {}} />
             </View>
           </Pressable>
         </View>

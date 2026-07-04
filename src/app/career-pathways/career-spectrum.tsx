@@ -3,6 +3,7 @@ import { useTheme } from "@/hooks/use-theme";
 import React, { useMemo, useEffect, useRef } from "react";
 import { View, Text, Pressable, ScrollView, Dimensions, StyleSheet } from "react-native";
 import Animated, { FadeIn, withRepeat, withSequence, withTiming, useAnimatedStyle, useSharedValue, Easing, useAnimatedScrollHandler, interpolate, withSpring } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { ArrowRight } from "lucide-react-native";
 import { Header } from "../../components/Header";
 
@@ -39,22 +40,51 @@ const CANVAS_SIZE = 3000; // Massive 2D canvas to allow scrolling past edges
 const CENTER = CANVAS_SIZE / 2;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Generate a beautiful, evenly spaced spiral distribution
-const getSpiralPositions = (count: number) => {
+// Generate a beautiful, perfectly spaced concentric ring distribution
+const getPerfectRingPositions = (count: number) => {
   const positions = [];
-  let angle = 0;
-  let radius = 100; // Start slightly closer to the center
   
-  for (let i = 0; i < count; i++) {
-    const x = CENTER + Math.cos(angle) * radius;
-    const y = CENTER + Math.sin(angle) * radius;
-    positions.push({ x, y });
+  const rings = [
+    { count: 6, radius: 240 },
+    { count: 10, radius: 460 },
+    { count: 10, radius: 680 }
+  ];
+  
+  let currentIdx = 0;
+  
+  for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
+    const ring = rings[ringIndex];
+    const itemsInRing = Math.min(ring.count, count - currentIdx);
     
-    // Golden angle approximation for organic scatter
-    angle += 2.39996; 
-    // Grow moderately to balance tight clustering and overlap
-    radius += 28; 
+    // Stagger odd rings for an interlocked look
+    const angleOffset = ringIndex % 2 !== 0 ? (Math.PI / itemsInRing) : 0;
+    
+    for (let i = 0; i < itemsInRing; i++) {
+      const angle = (i / itemsInRing) * Math.PI * 2 + angleOffset;
+      const x = CENTER + Math.cos(angle) * ring.radius;
+      const y = CENTER + Math.sin(angle) * ring.radius;
+      positions.push({ x, y });
+      currentIdx++;
+    }
+    
+    if (currentIdx >= count) break;
   }
+  
+  // Fallback for any extra items
+  let fallbackRadius = 900;
+  while (currentIdx < count) {
+    const remaining = count - currentIdx;
+    const itemsInRing = Math.min(12, remaining);
+    for (let i = 0; i < itemsInRing; i++) {
+      const angle = (i / itemsInRing) * Math.PI * 2;
+      const x = CENTER + Math.cos(angle) * fallbackRadius;
+      const y = CENTER + Math.sin(angle) * fallbackRadius;
+      positions.push({ x, y });
+      currentIdx++;
+    }
+    fallbackRadius += 220;
+  }
+  
   return positions;
 };
 
@@ -112,8 +142,12 @@ const FloatingPill = ({ area, position, index, theme, scrollX, scrollY }: any) =
       style={[
         {
           position: "absolute",
-          left: position.x - 120, // Wider offset to perfectly center the pill's origin
-          top: position.y - 20,
+          left: position.x - 150, // 300/2
+          top: position.y - 50,  // 100/2
+          width: 300,
+          height: 100,
+          justifyContent: 'center',
+          alignItems: 'center',
           zIndex: 10
         },
         animatedStyle
@@ -163,6 +197,23 @@ export default function CareerSpectrum() {
   const scrollX = useSharedValue(CENTER - SCREEN_WIDTH / 2); // Start roughly centered
   const scrollY = useSharedValue(CENTER - SCREEN_HEIGHT / 2); // Start roughly centered
   
+  const zoomScale = useSharedValue(1);
+  const savedZoomScale = useSharedValue(1);
+  
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((e) => {
+      zoomScale.value = Math.max(0.3, Math.min(savedZoomScale.value * e.scale, 3));
+    })
+    .onEnd(() => {
+      savedZoomScale.value = zoomScale.value;
+    });
+
+  const animatedCanvasStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: zoomScale.value }]
+    };
+  });
+  
   const handleScrollX = useAnimatedScrollHandler((event) => {
     scrollX.value = event.contentOffset.x;
   });
@@ -173,63 +224,95 @@ export default function CareerSpectrum() {
   
   const handleRecenter = () => {
     horizontalScrollRef.current?.scrollTo({ x: CENTER - SCREEN_WIDTH / 2, animated: true });
-    verticalScrollRef.current?.scrollTo({ y: CENTER - SCREEN_HEIGHT / 2, animated: true });
+    verticalScrollRef.current?.scrollTo({ y: CENTER - SCREEN_HEIGHT / 2 + 80, animated: true });
   };
 
   // Force scroll on mount to bypass any platform-specific contentOffset bugs
   useEffect(() => {
     setTimeout(() => {
       horizontalScrollRef.current?.scrollTo({ x: CENTER - SCREEN_WIDTH / 2, animated: false });
-      verticalScrollRef.current?.scrollTo({ y: CENTER - SCREEN_HEIGHT / 2, animated: false });
+      verticalScrollRef.current?.scrollTo({ y: CENTER - SCREEN_HEIGHT / 2 + 80, animated: false });
     }, 10);
   }, []);
   
   // Memoize positions so they don't jump around on re-renders
-  const positions = useMemo(() => getSpiralPositions(CAREER_AREAS.length), []);
+  const positions = useMemo(() => getPerfectRingPositions(CAREER_AREAS.length), []);
 
   return (
     <View style={commonStyles.container}>
       <Header title="Career Spectrum" showBack={true} scrollY={headerScrollY} />
 
       {/* 2D Scrollable Canvas */}
-      <Animated.ScrollView 
-        ref={horizontalScrollRef}
-        horizontal 
-        onScroll={handleScrollX}
-        scrollEventThrottle={16}
-        showsHorizontalScrollIndicator={false}
-        bounces={true}
-        contentOffset={{ x: CENTER - SCREEN_WIDTH / 2, y: 0 }}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
-        <Animated.ScrollView 
-          ref={verticalScrollRef}
-          onScroll={handleScrollY}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-          contentOffset={{ x: 0, y: CENTER - SCREEN_HEIGHT / 2 }}
-          contentContainerStyle={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
-        >
-          {/* Funky Canvas Background Pattern (Optional dots) */}
-          <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: theme.mode === "dark" ? "#1A1A2E" : "#F8FAFC", opacity: 0.5 }} />
+      <GestureDetector gesture={pinchGesture}>
+        <Animated.View style={{ flex: 1 }}>
+          <Animated.ScrollView 
+            ref={horizontalScrollRef}
+            horizontal 
+            onScroll={handleScrollX}
+            scrollEventThrottle={16}
+            showsHorizontalScrollIndicator={false}
+            bounces={true}
+            contentOffset={{ x: CENTER - SCREEN_WIDTH / 2, y: 0 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
+            <Animated.ScrollView 
+              ref={verticalScrollRef}
+              onScroll={handleScrollY}
+              scrollEventThrottle={16}
+              showsVerticalScrollIndicator={false}
+              bounces={true}
+              contentOffset={{ x: 0, y: CENTER - SCREEN_HEIGHT / 2 }}
+              contentContainerStyle={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
+            >
+              <Animated.View style={[{ width: CANVAS_SIZE, height: CANVAS_SIZE }, animatedCanvasStyle]}>
+                {/* Funky Canvas Background Pattern (Optional dots) */}
+                <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: theme.mode === "dark" ? "#1A1A2E" : "#F8FAFC", opacity: 0.5 }} />
 
+                {/* Center Target Circle */}
+                <View style={{
+                  position: 'absolute',
+                  left: CENTER - 100,
+                  top: CENTER - 100,
+                  width: 200,
+                  height: 200,
+                  borderRadius: 100,
+                  backgroundColor: theme.mode === 'dark' ? '#2D2D3D' : '#FFFFFF',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 10 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 20,
+                  elevation: 10,
+                  borderWidth: 2,
+                  borderColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  zIndex: 5
+                }}>
+                  <Text style={{ fontFamily: theme.fonts.bold, fontSize: 18, color: '#F59E0B', marginBottom: 4 }}>
+                    Career Areas
+                  </Text>
+                  <Text style={{ fontFamily: theme.fonts.medium, fontSize: 12, color: theme.textSecondary, textAlign: 'center', paddingHorizontal: 20 }}>
+                    Choose a career area to view the domains.
+                  </Text>
+                </View>
 
-
-          {/* Orbiting Career Pills */}
-          {CAREER_AREAS.map((area, index) => (
-            <FloatingPill 
-              key={area}
-              area={area}
-              position={positions[index]}
-              index={index}
-              theme={theme}
-              scrollX={scrollX}
-              scrollY={scrollY}
-            />
-          ))}
-        </Animated.ScrollView>
-      </Animated.ScrollView>
+                {/* Orbiting Career Pills */}
+                {CAREER_AREAS.map((area, index) => (
+                  <FloatingPill 
+                    key={area}
+                    area={area}
+                    position={positions[index]}
+                    index={index}
+                    theme={theme}
+                    scrollX={scrollX}
+                    scrollY={scrollY}
+                  />
+                ))}
+              </Animated.View>
+            </Animated.ScrollView>
+          </Animated.ScrollView>
+        </Animated.View>
+      </GestureDetector>
 
       {/* Floating Center Compass Arrow */}
       <Animated.View
@@ -242,7 +325,7 @@ export default function CareerSpectrum() {
           },
           useAnimatedStyle(() => {
             const viewCenterX = scrollX.value + SCREEN_WIDTH / 2;
-            const viewCenterY = scrollY.value + SCREEN_HEIGHT / 2;
+            const viewCenterY = scrollY.value + SCREEN_HEIGHT / 2 - 80;
             
             const dx = CENTER - viewCenterX;
             const dy = CENTER - viewCenterY;
