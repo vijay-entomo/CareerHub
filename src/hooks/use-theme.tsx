@@ -10,11 +10,15 @@ interface ThemeContextType {
   setTheme: (mode: ThemeMode) => void;
   setFontFamily: (font: keyof typeof AppFonts) => void;
   setPrimaryColor: (color: string) => void;
-  activeColors: Record<keyof typeof Colors.light, string>;
+  setCtaColor: (color: string) => void;
+  activeColors: Record<keyof typeof Colors.light, string> & { ctaColor: string };
   activeFonts: typeof AppFonts[keyof typeof AppFonts];
   activeFontFamily: keyof typeof AppFonts;
   activePrimaryColor: string | null;
+  activeCtaColor: string | null;
 }
+
+const DEFAULT_CTA_COLOR = "#000000";
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
@@ -23,16 +27,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('system');
   const [fontFamily, setFontFamilyState] = useState<keyof typeof AppFonts>('urbanist');
   const [primaryColor, setPrimaryColorState] = useState<string | null>(null);
+  const [ctaColor, setCtaColorState] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     // Load saved preferences on startup
     const loadPreferences = async () => {
       try {
-        const [savedTheme, savedFont, savedColor] = await Promise.all([
+        const [savedTheme, savedFont, savedColor, savedCta] = await Promise.all([
           AsyncStorage.getItem('@theme_mode'),
           AsyncStorage.getItem('@font_family'),
           AsyncStorage.getItem('@primary_color'),
+          AsyncStorage.getItem('@cta_color'),
         ]);
 
         if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
@@ -43,6 +49,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
         if (savedColor) {
           setPrimaryColorState(savedColor);
+        }
+        if (savedCta) {
+          setCtaColorState(savedCta);
         }
       } catch (e) {
         console.error('Failed to load preferences', e);
@@ -68,9 +77,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try { await AsyncStorage.setItem('@primary_color', newColor); } catch (e) {}
   };
 
+  const setCtaColor = async (newColor: string) => {
+    setCtaColorState(newColor);
+    try { await AsyncStorage.setItem('@cta_color', newColor); } catch (e) {}
+  };
+
   const currentTheme = mode === 'system' ? deviceTheme : mode;
-  const activeColors = { ...Colors[currentTheme] };
-  
+  const activeColors = { ...Colors[currentTheme], ctaColor: ctaColor ?? DEFAULT_CTA_COLOR };
+
   if (primaryColor) {
     (activeColors as any).primary = primaryColor;
     (activeColors as any).primaryForeground = getContrastColor(primaryColor);
@@ -83,12 +97,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   if (!isLoaded) return null;
 
   return (
-    <ThemeContext.Provider value={{ 
-      mode, setTheme, 
-      activeColors, activeFonts, 
-      setFontFamily, setPrimaryColor,
+    <ThemeContext.Provider value={{
+      mode, setTheme,
+      activeColors, activeFonts,
+      setFontFamily, setPrimaryColor, setCtaColor,
       activeFontFamily: fontFamily,
-      activePrimaryColor: primaryColor
+      activePrimaryColor: primaryColor,
+      activeCtaColor: ctaColor,
     }}>
       {children}
     </ThemeContext.Provider>
@@ -100,15 +115,18 @@ export function useTheme() {
   if (!context) {
     // Fallback if not wrapped in provider
     const deviceTheme = Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
-    return { 
-      ...Colors[deviceTheme], 
-      fonts: AppFonts.urbanist, 
-      mode: 'system' as ThemeMode, 
+    return {
+      ...Colors[deviceTheme],
+      ctaColor: DEFAULT_CTA_COLOR,
+      fonts: AppFonts.urbanist,
+      mode: 'system' as ThemeMode,
       setTheme: () => {},
       setFontFamily: () => {},
       setPrimaryColor: () => {},
+      setCtaColor: () => {},
       activeFontFamily: 'urbanist' as const,
-      activePrimaryColor: null
+      activePrimaryColor: null,
+      activeCtaColor: null,
     };
   }
   
@@ -121,15 +139,20 @@ export function useTheme() {
     setTheme: context.setTheme,
     setFontFamily: context.setFontFamily,
     setPrimaryColor: context.setPrimaryColor,
+    setCtaColor: context.setCtaColor,
     activeFontFamily: context.activeFontFamily,
     activePrimaryColor: context.activePrimaryColor,
+    activeCtaColor: context.activeCtaColor,
   } as Record<keyof typeof Colors.light, string> & {
+    ctaColor: string;
     fonts: typeof AppFonts[keyof typeof AppFonts];
     mode: ThemeMode;
     setTheme: (mode: ThemeMode) => void;
     setFontFamily: (font: keyof typeof AppFonts) => void;
     setPrimaryColor: (color: string) => void;
+    setCtaColor: (color: string) => void;
     activeFontFamily: keyof typeof AppFonts;
     activePrimaryColor: string | null;
+    activeCtaColor: string | null;
   };
 }

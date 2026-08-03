@@ -1,5 +1,5 @@
 import { useTheme } from "@/hooks/use-theme";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { ChevronLeft, CheckCircle2 } from "lucide-react-native";
 import { MotiView, AnimatePresence } from "moti";
@@ -22,6 +22,8 @@ export default function OTP() {
   const theme = useTheme();
   const styles = createStyles(theme);
   const router = useRouter();
+  const { mode, email } = useLocalSearchParams<{ mode?: string; email?: string }>();
+  const isResetMode = mode === "reset";
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -30,41 +32,73 @@ export default function OTP() {
   const inputs = useRef<Array<TextInput | null>>([]);
 
   useEffect(() => {
-    if (timeLeft === 0) return;
     const intervalId = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(intervalId);
-  }, [timeLeft]);
+  }, []);
+
+  useEffect(() => {
+    if (!isVerified) return;
+    const t = setTimeout(() => {
+      if (isResetMode) {
+        router.replace({ pathname: "/reset-password", params: email ? { email } : {} });
+      } else {
+        router.replace("/(tabs)/home");
+      }
+    }, 1400);
+    return () => clearTimeout(t);
+  }, [isVerified, isResetMode, email, router]);
 
   const handleResend = () => {
     if (timeLeft === 0) {
       setTimeLeft(30);
       setOtp(["", "", "", ""]);
       setError("");
+      inputs.current[0]?.focus();
+    }
+  };
+
+  const verify = (code: string) => {
+    Keyboard.dismiss();
+    if (code === "1111") {
+      setTimeout(() => setIsVerified(true), 300);
+    } else {
+      setError("Invalid OTP code. Please try again.");
+      setOtp(["", "", "", ""]);
+      setTimeout(() => inputs.current[0]?.focus(), 50);
     }
   };
 
   const handleOtpChange = (value: string, index: number) => {
+    // Handle paste of full/partial code into any cell
+    const digits = value.replace(/\D/g, "");
+    if (digits.length > 1) {
+      const next = ["", "", "", ""];
+      for (let i = 0; i < 4; i++) next[i] = digits[i] ?? "";
+      setOtp(next);
+      setError("");
+      const filled = next.join("");
+      if (filled.length === 4) {
+        verify(filled);
+      } else {
+        inputs.current[Math.min(digits.length, 3)]?.focus();
+      }
+      return;
+    }
+
     setError("");
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = digits;
     setOtp(newOtp);
 
-    // Auto-focus next input
-    if (value && index < 3) {
+    if (digits && index < 3) {
       inputs.current[index + 1]?.focus();
     }
 
-    // Auto-verify when 4 digits are entered
     const currentOtpString = newOtp.join("");
     if (currentOtpString.length === 4) {
-      Keyboard.dismiss();
-      if (currentOtpString === "1111") {
-        setTimeout(() => setIsVerified(true), 300);
-      } else {
-        setError("Invalid OTP code. Please try again.");
-      }
+      verify(currentOtpString);
     }
   };
 
@@ -85,6 +119,7 @@ export default function OTP() {
             exit={{ opacity: 0 }}
             transition={{ type: "timing", duration: 800 }}
             style={[StyleSheet.absoluteFillObject, { backgroundColor: '#FFFFFF' }]}
+            pointerEvents="none"
           >
             <LinearGradient
               colors={["rgba(46, 204, 113, 0.3)", "#FFFFFF"]}
@@ -100,6 +135,7 @@ export default function OTP() {
             exit={{ opacity: 0 }}
             transition={{ type: "timing", duration: 400 }}
             style={[StyleSheet.absoluteFillObject, { backgroundColor: '#FFFFFF' }]}
+            pointerEvents="none"
           >
             <LinearGradient
               colors={["rgba(255, 59, 48, 0.2)", "#FFFFFF"]}
@@ -127,6 +163,9 @@ export default function OTP() {
                 }
               }}
               style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={10}
             >
               <ChevronLeft size={28} color={(isVerified || !!error) ? '#000000' : theme.text} strokeWidth={2.5} />
             </TouchableOpacity>
@@ -142,11 +181,14 @@ export default function OTP() {
                   style={styles.heroSection}
                 >
                   <Text style={[styles.title, !!error && { color: '#000000' }]}>
-                    Enter OTP to Verify{"\n"}Your Identity
+                    {isResetMode
+                      ? `Verify Your Email\nto Reset Password`
+                      : `Enter OTP to Verify\nYour Identity`}
                   </Text>
                   <Text style={[styles.subtitle, !!error && { color: '#000000' }]}>
-                    A one-time password (OTP) has been sent to your registered
-                    email.
+                    {isResetMode && email
+                      ? `We sent a 4-digit code to ${email}. Enter it below to continue.`
+                      : "A one-time password (OTP) has been sent to your registered email."}
                   </Text>
                 </MotiView>
               )}
@@ -182,7 +224,10 @@ export default function OTP() {
                           onChangeText={(val) => handleOtpChange(val, index)}
                           onKeyPress={(e) => handleKeyPress(e, index)}
                           keyboardType="number-pad"
-                          maxLength={1}
+                          maxLength={index === 0 ? 4 : 1}
+                          textContentType={index === 0 ? "oneTimeCode" : "none"}
+                          autoComplete={index === 0 ? "sms-otp" : "off"}
+                          accessibilityLabel={`OTP digit ${index + 1}`}
                         />
                       ))}
                     </View>
@@ -191,6 +236,14 @@ export default function OTP() {
                       onPress={handleResend}
                       disabled={timeLeft > 0}
                       style={styles.resendContainer}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        timeLeft > 0
+                          ? `Resend available in ${timeLeft} seconds`
+                          : "Resend code"
+                      }
+                      accessibilityState={{ disabled: timeLeft > 0 }}
+                      hitSlop={10}
                     >
                       <Text
                         style={[
@@ -200,7 +253,7 @@ export default function OTP() {
                         ]}
                       >
                         {timeLeft > 0
-                          ? `Resend code in 00.${timeLeft.toString().padStart(2, "0")}`
+                          ? `Resend code in 0:${timeLeft.toString().padStart(2, "0")}`
                           : "Resend code"}
                       </Text>
                     </TouchableOpacity>
@@ -213,7 +266,13 @@ export default function OTP() {
                           exit={{ opacity: 0, translateY: -8 }}
                           transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         >
-                          <Text style={[styles.errorText, { color: '#000000', marginTop: 16 }]}>{error}</Text>
+                          <Text
+                            style={[styles.errorText, { color: '#000000', marginTop: 16 }]}
+                            accessibilityRole="alert"
+                            accessibilityLiveRegion="assertive"
+                          >
+                            {error}
+                          </Text>
                         </MotiView>
                       ) : null}
                     </AnimatePresence>
@@ -235,8 +294,8 @@ export default function OTP() {
                       <CheckCircle2 size={64} color="#2ECC71" strokeWidth={2.5} />
                     </MotiView>
                     <Text style={[styles.successTitle, { color: '#000000' }]}>Verified Successfully!</Text>
-                    <Text style={[styles.successSubtitle, { color: '#000000', opacity: 0.7 }]}>
-                      Your identity has been verified.
+                    <Text style={[styles.successSubtitle, { color: '#4A4A4A' }]}>
+                      {isResetMode ? "Now let's set your new password." : "Your identity has been verified."}
                     </Text>
                   </MotiView>
                 )}

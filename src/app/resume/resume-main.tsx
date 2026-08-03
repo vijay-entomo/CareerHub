@@ -11,25 +11,31 @@ import {
   Trash2,
   Wand2,
 } from "lucide-react-native";
-import { useState } from "react";
 import {
+  Dimensions,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
-  Dimensions,
-  Platform,
 } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
 import { Header } from "../../components/Header";
+import { IconTile } from "@/components/IconTile";
 import { SectionHeader } from "../../components/SectionHeader";
-import { BlurView } from "expo-blur";
+
+// ── Layout tokens (4/8 rhythm) ─────────────────────────────────────────
+const PAGE_HPAD = 20;
+const SECTION_GAP = 32;
+const CARD_GAP = 16;
+const CARD_INNER_PAD = 20;
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = width * 0.75;
+// Cap width so cards don't balloon on tablets.
+const CARD_WIDTH = Math.min(width * 0.78, 320);
 
 const MOCK_RESUMES = [
   {
@@ -37,14 +43,14 @@ const MOCK_RESUMES = [
     title: "Senior Frontend Engineer",
     date: "Updated 2h ago",
     score: 92,
-    color: "#B983FF", // Purple
+    color: "#B983FF",
   },
   {
     id: "r2",
     title: "UX/UI Designer",
     date: "Updated 1w ago",
     score: 85,
-    color: "#FF9F43", // Orange
+    color: "#FF9F43",
   },
 ];
 
@@ -90,7 +96,6 @@ export default function ResumeMain() {
   const router = useRouter();
 
   const scrollY = useSharedValue(0);
-
   const handleVerticalScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
   });
@@ -104,25 +109,27 @@ export default function ResumeMain() {
         scrollY={scrollY}
       />
       <Animated.ScrollView
-        contentContainerStyle={[commonStyles.scrollContent, { paddingBottom: 100 }]}
+        contentContainerStyle={[
+          commonStyles.scrollContent,
+          { paddingBottom: 120 },
+        ]}
         showsVerticalScrollIndicator={false}
         onScroll={handleVerticalScroll}
         scrollEventThrottle={16}
       >
-        <SectionHeader
-          title="My Resumes"
-          onSeeAll={() => {}}
-          actionLabel="View All"
-        />
+        <SectionHeader title="My Resumes" />
 
         {/* Horizontal Scroll for Resumes */}
         <Animated.ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
-          snapToInterval={CARD_WIDTH + 16}
+          contentContainerStyle={{
+            paddingHorizontal: PAGE_HPAD,
+            gap: CARD_GAP,
+          }}
+          snapToInterval={CARD_WIDTH + CARD_GAP}
           decelerationRate="fast"
-          style={{ marginBottom: 32 }}
+          style={{ marginBottom: SECTION_GAP }}
         >
           {MOCK_RESUMES.map((resume) => (
             <View
@@ -134,19 +141,20 @@ export default function ResumeMain() {
               ]}
             >
               <View style={styles.resumeCardTop}>
-                <View
-                  style={[
-                    styles.resumeIconWrapper,
-                    { backgroundColor: resume.color + "15" },
-                  ]}
-                >
-                  <FileText size={24} color={resume.color} strokeWidth={2} />
-                </View>
+                <IconTile
+                  Icon={FileText}
+                  size="md"
+                  color={resume.color}
+                  accessibilityLabel="Resume file"
+                />
                 <Pressable
                   style={({ pressed }) => [
                     styles.moreButton,
-                    { opacity: pressed ? 0.6 : 1 },
+                    { opacity: pressed ? 0.5 : 1 },
                   ]}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="More options"
                 >
                   <MoreVertical size={20} color={theme.textSecondary} />
                 </Pressable>
@@ -168,36 +176,58 @@ export default function ResumeMain() {
                 </View>
 
                 <View style={styles.actionButtons}>
-                  <Pressable style={styles.iconButton}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.iconButton,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit resume"
+                  >
                     <Edit3 size={18} color={theme.text} />
                   </Pressable>
-                  <Pressable style={styles.iconButton}>
-                    <Trash2 size={18} color={theme.error || "#EA5455"} />
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.iconButton,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete resume"
+                  >
+                    <Trash2 size={18} color={theme.danger ?? "#EA5455"} />
                   </Pressable>
                 </View>
               </View>
             </View>
           ))}
+
           {/* Add New Resume Placeholder */}
           <Pressable
-            style={[
+            style={({ pressed }) => [
               styles.resumeCard,
               styles.addResumeCard,
               {
                 borderColor: theme.border,
-                backgroundColor: theme.mode === "dark" ? "rgba(255,255,255,0.02)" : "#F8F8F8",
+                backgroundColor:
+                  theme.mode === "dark"
+                    ? "rgba(255,255,255,0.02)"
+                    : "rgba(0,0,0,0.02)",
               },
+              pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 },
             ]}
             onPress={() => router.push("/resume/create")}
+            accessibilityRole="button"
+            accessibilityLabel="Create a new resume"
           >
-            <View
-              style={[
-                styles.addResumeIconWrapper,
-                { backgroundColor: theme.primary + "15" },
-              ]}
-            >
-              <PlusCircle size={32} color={theme.primary} strokeWidth={1.5} />
-            </View>
+            <IconTile
+              Icon={PlusCircle}
+              size="lg"
+              tone="primary"
+              strokeWidth={1.5}
+              style={{ marginBottom: 16 }}
+            />
             <Text style={styles.addResumeTitle}>New Resume</Text>
             <Text style={styles.addResumeSubtitle}>Start from scratch</Text>
           </Pressable>
@@ -214,19 +244,24 @@ export default function ResumeMain() {
                   styles.toolCard,
                   commonStyles.liquidGlassBorder,
                   { backgroundColor: tool.color + "15" },
-                  pressed && { transform: [{ scale: 0.96 }] },
+                  pressed && { transform: [{ scale: 0.97 }], opacity: 0.95 },
                 ]}
                 onPress={() => router.push(tool.route as any)}
+                accessibilityRole="button"
+                accessibilityLabel={`${tool.title.replace("\n", " ")} — ${tool.subtitle}`}
               >
-                <View style={styles.toolIconWrapper}>
-                  <Icon size={28} color={tool.color} strokeWidth={2} />
-                </View>
+                <IconTile
+                  Icon={Icon}
+                  size="md"
+                  color={tool.color}
+                  style={styles.toolIconWrapper}
+                />
                 <Text style={styles.toolTitle}>{tool.title}</Text>
                 <Text style={styles.toolSubtitle}>{tool.subtitle}</Text>
 
                 {/* Subtle Background Icon */}
-                <View style={styles.toolBgIcon}>
-                  <Icon size={80} color={tool.color} opacity={0.1} />
+                <View style={styles.toolBgIcon} pointerEvents="none">
+                  <Icon size={96} color={tool.color} opacity={0.08} />
                 </View>
               </Pressable>
             );
@@ -241,42 +276,40 @@ const createStyles = (theme: any) =>
   StyleSheet.create({
     resumeCard: {
       width: CARD_WIDTH,
-      borderRadius: 32,
-      padding: 24,
+      borderRadius: 28,
+      padding: CARD_INNER_PAD,
       justifyContent: "space-between",
-      ...(Platform.OS === "ios" ? { shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.05, shadowRadius: 20 } : { elevation: 4 }),
+      ...Platform.select({
+        ios: {
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.06,
+          shadowRadius: 16,
+        },
+        android: { elevation: 3 },
+        default: {},
+      }),
     },
     resumeCardTop: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      marginBottom: 20,
-    },
-    resumeIconWrapper: {
-      width: 56,
-      height: 56,
-      borderRadius: 20,
-      alignItems: "center",
-      justifyContent: "center",
-      // @ts-ignore
-      borderCurve: "continuous",
+      marginBottom: 16,
     },
     moreButton: {
-      width: 40,
-      height: 40,
+      width: 32,
+      height: 32,
       alignItems: "center",
       justifyContent: "center",
-      marginRight: -10,
-      marginTop: -10,
     },
     resumeCardContent: {
-      marginBottom: 24,
+      marginBottom: 20,
     },
     resumeTitle: {
-      fontSize: 20,
+      fontSize: 18,
       fontFamily: theme.fonts.bold,
       color: theme.text,
-      marginBottom: 6,
+      marginBottom: 4,
     },
     resumeDate: {
       fontSize: 13,
@@ -289,15 +322,19 @@ const createStyles = (theme: any) =>
       alignItems: "center",
       paddingTop: 16,
       borderTopWidth: 1,
-      borderTopColor: "rgba(150, 150, 150, 0.1)",
+      borderTopColor:
+        theme.mode === "dark"
+          ? "rgba(255,255,255,0.06)"
+          : "rgba(0,0,0,0.06)",
     },
     scorePill: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "#F5F5F5",
+      backgroundColor:
+        theme.mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 99,
+      borderRadius: 999,
       gap: 6,
     },
     scoreText: {
@@ -311,36 +348,29 @@ const createStyles = (theme: any) =>
     },
     actionButtons: {
       flexDirection: "row",
-      gap: 12,
+      gap: 8,
     },
     iconButton: {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: theme.mode === "dark" ? "rgba(255,255,255,0.05)" : "#F5F5F5",
+      backgroundColor:
+        theme.mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
       alignItems: "center",
       justifyContent: "center",
     },
     addResumeCard: {
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderStyle: "dashed",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 40,
-    },
-    addResumeIconWrapper: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 16,
+      paddingVertical: 32,
     },
     addResumeTitle: {
-      fontSize: 18,
+      fontSize: 17,
       fontFamily: theme.fonts.bold,
       color: theme.text,
-      marginBottom: 6,
+      marginBottom: 4,
     },
     addResumeSubtitle: {
       fontSize: 13,
@@ -350,38 +380,27 @@ const createStyles = (theme: any) =>
     toolsGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      paddingHorizontal: 20,
+      paddingHorizontal: PAGE_HPAD,
       justifyContent: "space-between",
-      gap: 16,
+      gap: CARD_GAP,
     },
     toolCard: {
-      width: (width - 40 - 16) / 2, // 2 columns
+      width: (width - PAGE_HPAD * 2 - CARD_GAP) / 2,
       aspectRatio: 1,
-      borderRadius: 32,
-      padding: 20,
+      borderRadius: 28,
+      padding: CARD_INNER_PAD,
       justifyContent: "space-between",
       overflow: "hidden",
     },
     toolIconWrapper: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: theme.background,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 16,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 2,
+      marginBottom: 12,
     },
     toolTitle: {
-      fontSize: 18,
+      fontSize: 17,
       fontFamily: theme.fonts.bold,
       color: theme.text,
       lineHeight: 22,
-      marginBottom: 6,
+      marginBottom: 4,
     },
     toolSubtitle: {
       fontSize: 12,
@@ -390,8 +409,8 @@ const createStyles = (theme: any) =>
     },
     toolBgIcon: {
       position: "absolute",
-      right: -20,
-      bottom: -20,
+      right: -16,
+      bottom: -16,
       zIndex: -1,
     },
   });

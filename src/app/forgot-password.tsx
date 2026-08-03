@@ -7,7 +7,8 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, Mail } from 'lucide-react-native';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { BorderRadius } from '../constants/theme';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPassword() {
   const theme = useTheme();
@@ -15,19 +16,26 @@ export default function ForgotPassword() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const goBackOrHome = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  };
 
   const handleReset = () => {
-    if (!email.trim() || !email.includes('@')) {
+    const trimmed = email.trim();
+    if (!EMAIL_RE.test(trimmed)) {
       setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError('');
-      alert('Password reset link sent!');
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace("/");
-      }
+      return;
     }
+    setEmailError('');
+    setIsSubmitting(true);
+    // Simulate an API call, then hand off to the OTP step.
+    setTimeout(() => {
+      setIsSubmitting(false);
+      router.push({ pathname: '/otp', params: { mode: 'reset', email: trimmed } });
+    }, 400);
   };
 
   return (
@@ -40,14 +48,11 @@ export default function ForgotPassword() {
           <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
             
             <TouchableOpacity
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  router.replace("/");
-                }
-              }}
+              onPress={goBackOrHome}
               style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={10}
             >
               <ChevronLeft size={28} color={theme.text} strokeWidth={2.5} />
             </TouchableOpacity>
@@ -59,7 +64,9 @@ export default function ForgotPassword() {
               style={styles.heroSection}
             >
               <Text style={styles.title}>Reset Password</Text>
-              <Text style={styles.subtitle}>Enter your email to receive a link</Text>
+              <Text style={styles.subtitle}>
+                Enter your email and we'll send you a verification code to reset your password.
+              </Text>
             </MotiView>
 
             <MotiView
@@ -76,12 +83,17 @@ export default function ForgotPassword() {
                 error={emailError}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="username"
+                autoComplete="email"
+                returnKeyType="go"
+                onSubmitEditing={handleReset}
                 Icon={Mail}
               />
 
-              <Button 
-                title="Send Reset Link" 
-                onPress={handleReset} 
+              <Button
+                title={isSubmitting ? 'Sending…' : 'Send Verification Code'}
+                onPress={handleReset}
                 variant="contrast"
                 shape="square"
                 style={{ marginTop: 16 }}
@@ -94,7 +106,12 @@ export default function ForgotPassword() {
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
                 Remember your password?{' '}
-                <Text style={styles.footerLink} onPress={() => router.push('/login')}>
+                <Text
+                  style={styles.footerLink}
+                  onPress={() => router.push('/login')}
+                  accessibilityRole="link"
+                  accessibilityLabel="Sign in to existing account"
+                >
                   Sign In
                 </Text>
               </Text>

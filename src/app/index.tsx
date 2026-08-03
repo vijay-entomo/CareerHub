@@ -2,10 +2,12 @@ import { AppFonts } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { useRouter } from "expo-router";
 import { MotiView } from "moti";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles } from "lucide-react-native";
 import {
   Image,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,8 +25,60 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
 import { SwipeButton } from "../components/SwipeButton";
+import SkiaBlob from "../components/SkiaBlob";
+import WebGLDiamond from "../components/WebGLDiamond";
+import HeatmapShader from "../components/HeatmapShader";
+
+const WebAwareSkiaBlob = ({ colors }: { colors: [string, string, string] }) => {
+  if (Platform.OS === 'web') {
+    return <WebGLDiamond colors={colors} />;
+  }
+  return <SkiaBlob colors={colors} />;
+};
+
+const TypewriterText = ({
+  text,
+  style,
+  delay = 0,
+  speed = 40,
+  isVisible = true,
+}: {
+  text: string;
+  style?: any;
+  delay?: number;
+  speed?: number;
+  isVisible?: boolean;
+}) => {
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    if (!isVisible) {
+      setDisplayedText("");
+      return;
+    }
+    let i = 0;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const timeoutId = setTimeout(() => {
+      intervalId = setInterval(() => {
+        setDisplayedText(text.substring(0, i + 1));
+        i++;
+        if (i >= text.length && intervalId) clearInterval(intervalId);
+      }, speed);
+    }, delay);
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [text, delay, speed, isVisible]);
+  
+  return (
+    <View style={{ position: 'relative', flexDirection: 'row' }}>
+      <Text style={[style, { opacity: 0 }]}>{text}</Text>
+      <Text style={[style, { position: 'absolute', left: 0, top: 0 }]}>{displayedText}</Text>
+    </View>
+  );
+};
 
 const FloatingBadge = ({
   label,
@@ -90,6 +144,13 @@ export default function Index() {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useSharedValue(0);
   const lastIndex = useSharedValue(0);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const jumpTo = (index: number) => {
+    scrollRef.current?.scrollTo({ x: index * width, y: 0, animated: true });
+  };
+
+  const SLIDE_ACCENTS = ["#00E676", "#FF4081", "#FF7043"] as const;
 
   const handleScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -144,35 +205,28 @@ export default function Index() {
       />
 
       <SafeAreaView style={{ flex: 1 }}>
-        {/* Persistent Pagination Indicators Overlay - Top Left */}
+        {/* Persistent Pagination Indicators — tap to jump between slides */}
         <View style={[styles.paginationContainer, { top: 20 }]}>
-          <View
-            style={[
-              styles.dot,
-              activeIndex === 0
-                ? [styles.dotActive, { backgroundColor: "#00E676" }]
-                : styles.dotInactive,
-            ]}
-          />
-          <View
-            style={[
-              styles.dot,
-              activeIndex === 1
-                ? [styles.dotActive, { backgroundColor: "#FF4081" }]
-                : styles.dotInactive,
-            ]}
-          />
-          <View
-            style={[
-              styles.dot,
-              activeIndex === 2
-                ? [styles.dotActive, { backgroundColor: "#FF7043" }]
-                : styles.dotInactive,
-            ]}
-          />
+          {SLIDE_ACCENTS.map((color, i) => (
+            <Pressable
+              key={i}
+              onPress={() => jumpTo(i)}
+              hitSlop={{ top: 20, bottom: 20, left: 10, right: 10 }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeIndex === i }}
+              accessibilityLabel={`Slide ${i + 1} of ${SLIDE_ACCENTS.length}`}
+              style={[
+                styles.dot,
+                activeIndex === i
+                  ? [styles.dotActive, { backgroundColor: color }]
+                  : styles.dotInactive,
+              ]}
+            />
+          ))}
         </View>
 
         <Animated.ScrollView
+          ref={scrollRef as any}
           horizontal
           showsHorizontalScrollIndicator={false}
           bounces={false}
@@ -208,11 +262,7 @@ export default function Index() {
                   }}
                 >
                   <Animated.View style={blob1Style}>
-                    <Image
-                      source={require("../../assets/images/learning_3d_blob.png")}
-                      style={{ width: 280, height: 280, borderRadius: 140 }}
-                      resizeMode="cover"
-                    />
+                    <WebAwareSkiaBlob colors={['#00E676', '#1a1a1a', '#D7FE03']} />
                   </Animated.View>
                 </MotiView>
 
@@ -256,29 +306,29 @@ export default function Index() {
                   delay={700}
                   isVisible={activeIndex === 0}
                 />
-                <Text style={[styles.starIcon, { top: 10, left: 20 }]}>✦</Text>
-                <Text
-                  style={[
-                    styles.starIcon,
-                    { bottom: 40, right: 10, fontSize: 16 },
-                  ]}
-                >
-                  ✦
-                </Text>
+                <View style={[styles.starIcon, { top: 10, left: 20 }]}>
+                  <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
+                </View>
+                <View style={[styles.starIcon, { bottom: 40, right: 10 }]}>
+                  <Sparkles size={16} color="#FFFFFF" strokeWidth={2} />
+                </View>
               </View>
 
               <View style={styles.textSection}>
-                <Text style={styles.newHeading}>Build Your</Text>
-                <Text style={styles.newHeadingRow}>
-                  <Text style={[styles.cursiveHeading, { color: "#00E676" }]}>
-                    Future{" "}
+                <TypewriterText text="Build Your" style={styles.newHeading} delay={200} isVisible={activeIndex === 0} />
+                <View style={styles.newHeadingRow}>
+                  <TypewriterText text="Future " style={[styles.cursiveHeading, { color: "#00E676" }]} delay={600} isVisible={activeIndex === 0} />
+                  <TypewriterText text="Skills" style={styles.newHeading} delay={900} isVisible={activeIndex === 0} />
+                </View>
+                <MotiView
+                  animate={{ opacity: activeIndex === 0 ? 1 : 0, translateY: activeIndex === 0 ? 0 : 10 }}
+                  transition={{ type: 'timing', duration: 400, delay: activeIndex === 0 ? 1200 : 0 }}
+                >
+                  <Text style={styles.newSubtitle}>
+                    Master in-demand skills with expert-led{"\n"}courses tailored
+                    for your career growth.
                   </Text>
-                  <Text style={styles.newHeading}>Skills</Text>
-                </Text>
-                <Text style={styles.newSubtitle}>
-                  Master in-demand skills with expert-led{"\n"}courses tailored
-                  for your career growth.
-                </Text>
+                </MotiView>
               </View>
             </View>
           </View>
@@ -304,11 +354,7 @@ export default function Index() {
                   }}
                 >
                   <Animated.View style={blob2Style}>
-                    <Image
-                      source={require("../../assets/images/mentor_3d_blob.png")}
-                      style={{ width: 280, height: 280, borderRadius: 140 }}
-                      resizeMode="cover"
-                    />
+                    <WebAwareSkiaBlob colors={['#FF4081', '#1a1a1a', '#FCE4EC']} />
                   </Animated.View>
                 </MotiView>
 
@@ -352,28 +398,29 @@ export default function Index() {
                   delay={700}
                   isVisible={activeIndex === 1}
                 />
-                <Text
-                  style={[styles.starIcon, { top: 0, left: 10, fontSize: 32 }]}
-                >
-                  ✦
-                </Text>
-                <Text style={[styles.starIcon, { bottom: 10, right: 30 }]}>
-                  ✦
-                </Text>
+                <View style={[styles.starIcon, { top: 0, left: 10 }]}>
+                  <Sparkles size={32} color="#FFFFFF" strokeWidth={2} />
+                </View>
+                <View style={[styles.starIcon, { bottom: 10, right: 30 }]}>
+                  <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
+                </View>
               </View>
 
               <View style={styles.textSection}>
-                <Text style={styles.newHeading}>Learn And</Text>
-                <Text style={styles.newHeadingRow}>
-                  <Text style={[styles.cursiveHeading, { color: "#FF4081" }]}>
-                    Empower{" "}
+                <TypewriterText text="Learn And" style={styles.newHeading} delay={200} isVisible={activeIndex === 1} />
+                <View style={styles.newHeadingRow}>
+                  <TypewriterText text="Empower " style={[styles.cursiveHeading, { color: "#FF4081" }]} delay={600} isVisible={activeIndex === 1} />
+                  <TypewriterText text="Yourself" style={styles.newHeading} delay={950} isVisible={activeIndex === 1} />
+                </View>
+                <MotiView
+                  animate={{ opacity: activeIndex === 1 ? 1 : 0, translateY: activeIndex === 1 ? 0 : 10 }}
+                  transition={{ type: 'timing', duration: 400, delay: activeIndex === 1 ? 1300 : 0 }}
+                >
+                  <Text style={styles.newSubtitle}>
+                    Get 1-on-1 guidance from industry leaders{"\n"}and accelerate
+                    your professional journey.
                   </Text>
-                  <Text style={styles.newHeading}>Yourself</Text>
-                </Text>
-                <Text style={styles.newSubtitle}>
-                  Get 1-on-1 guidance from industry leaders{"\n"}and accelerate
-                  your professional journey.
-                </Text>
+                </MotiView>
               </View>
             </View>
           </View>
@@ -399,11 +446,7 @@ export default function Index() {
                   }}
                 >
                   <Animated.View style={blob3Style}>
-                    <Image
-                      source={require("../../assets/images/jobs_3d_blob.png")}
-                      style={{ width: 280, height: 280, borderRadius: 140 }}
-                      resizeMode="cover"
-                    />
+                    <WebAwareSkiaBlob colors={['#FF7043', '#1a1a1a', '#FFCCBC']} />
                   </Animated.View>
                 </MotiView>
 
@@ -447,30 +490,28 @@ export default function Index() {
                   delay={700}
                   isVisible={activeIndex === 2}
                 />
-                <Text
-                  style={[
-                    styles.starIcon,
-                    { top: -20, left: 80, fontSize: 32 },
-                  ]}
-                >
-                  ✦
-                </Text>
-                <Text style={[styles.starIcon, { bottom: -20, right: 60 }]}>
-                  ✦
-                </Text>
+                <View style={[styles.starIcon, { top: -20, left: 80 }]}>
+                  <Sparkles size={32} color="#FFFFFF" strokeWidth={2} />
+                </View>
+                <View style={[styles.starIcon, { bottom: -20, right: 60 }]}>
+                  <Sparkles size={22} color="#FFFFFF" strokeWidth={2} />
+                </View>
               </View>
 
               <View style={styles.textSection}>
-                <Text style={styles.newHeading}>Stay</Text>
-                <Text style={styles.newHeadingRow}>
-                  <Text style={[styles.cursiveHeading, { color: "#FF7043" }]}>
-                    Motivated{" "}
+                <TypewriterText text="Stay" style={styles.newHeading} delay={200} isVisible={activeIndex === 2} />
+                <View style={styles.newHeadingRow}>
+                  <TypewriterText text="Motivated " style={[styles.cursiveHeading, { color: "#FF7043" }]} delay={400} isVisible={activeIndex === 2} />
+                </View>
+                <MotiView
+                  animate={{ opacity: activeIndex === 2 ? 1 : 0, translateY: activeIndex === 2 ? 0 : 10 }}
+                  transition={{ type: 'timing', duration: 400, delay: activeIndex === 2 ? 900 : 0 }}
+                >
+                  <Text style={styles.newSubtitle}>
+                    Discover exclusive opportunities and get{"\n"}matched with top
+                    companies worldwide.
                   </Text>
-                </Text>
-                <Text style={styles.newSubtitle}>
-                  Discover exclusive opportunities and get{"\n"}matched with top
-                  companies worldwide.
-                </Text>
+                </MotiView>
               </View>
             </View>
           </View>
@@ -489,6 +530,8 @@ export default function Index() {
                 <Text
                   style={[styles.signupLink, { color: "#FFF" }]}
                   onPress={() => router.push("/signup")}
+                  accessibilityRole="link"
+                  accessibilityLabel="Create a new account"
                 >
                   Create an account
                 </Text>
@@ -602,7 +645,6 @@ const createStyles = (width: number, theme: any) =>
       flexDirection: "row",
       gap: 8,
       zIndex: 100,
-      pointerEvents: "none",
     },
     dot: {
       height: 8,
@@ -660,7 +702,7 @@ const createStyles = (width: number, theme: any) =>
     newSubtitle: {
       fontSize: 14,
       fontFamily: theme.fonts.regular,
-      color: "#A0A0A0",
+      color: "#C4C4C4",
       textAlign: "center",
       lineHeight: 22,
     },

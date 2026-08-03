@@ -5,6 +5,7 @@ import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
+import { MotiView } from "moti";
 import { ArrowUpRight, Bell, Heart } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -407,6 +408,124 @@ const BANNER_DATA = [
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
+// ── Design Spell: Interactive greeting ────────────────────────────────────
+// Characters spring in on mount, then a tap sends a "wave" cascading through
+// them — a tiny piece of personality on an otherwise inert screen title.
+const WavyChar = ({
+  ch,
+  index,
+  wave,
+  style,
+  total,
+}: {
+  ch: string;
+  index: number;
+  wave: Animated.SharedValue<number>;
+  style: any;
+  total: number;
+}) => {
+  const animStyle = useAnimatedStyle(() => {
+    const center = index / Math.max(1, total - 1);
+    const width = 0.18;
+    const localProgress = interpolate(
+      wave.value,
+      [Math.max(0, center - width), center, Math.min(1, center + width)],
+      [0, 1, 0],
+      "clamp",
+    );
+    return {
+      transform: [
+        { translateY: -14 * localProgress },
+        { scale: 1 + 0.12 * localProgress },
+      ],
+    };
+  });
+
+  return (
+    <MotiView
+      from={{ opacity: 0, translateY: 14, scale: 0.7 }}
+      animate={{ opacity: 1, translateY: 0, scale: 1 }}
+      transition={{
+        type: "spring",
+        damping: 14,
+        stiffness: 260,
+        delay: 120 + index * 45,
+      }}
+    >
+      <Animated.Text style={[style, animStyle]}>
+        {ch === " " ? " " : ch}
+      </Animated.Text>
+    </MotiView>
+  );
+};
+
+const SparkleGreeting = ({ text, style }: { text: string; style: any }) => {
+  const wave = useSharedValue(0);
+  const chars = text.split("");
+
+  const handlePress = () => {
+    wave.value = 0;
+    wave.value = withTiming(1, {
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+    });
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      hitSlop={8}
+      accessibilityRole="header"
+      accessibilityLabel={text}
+    >
+      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+        {chars.map((ch, i) => (
+          <WavyChar
+            key={`${ch}-${i}`}
+            ch={ch}
+            index={i}
+            wave={wave}
+            style={style}
+            total={chars.length}
+          />
+        ))}
+      </View>
+    </Pressable>
+  );
+};
+
+// ── Design Spell: Idle-wobble notification bell ──────────────────────────
+// Every few seconds the bell does a subtle physical "ring" — nudging the eye
+// toward the unread indicator without ever demanding attention.
+const WobbleBell = () => {
+  const theme = useTheme();
+  const rot = useSharedValue(0);
+
+  useEffect(() => {
+    rot.value = withRepeat(
+      withSequence(
+        withTiming(0, { duration: 4200 }),
+        withTiming(-0.18, { duration: 60 }),
+        withTiming(0.2, { duration: 90 }),
+        withTiming(-0.14, { duration: 90 }),
+        withTiming(0.08, { duration: 90 }),
+        withTiming(0, { duration: 120 }),
+      ),
+      -1,
+    );
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rot.value}rad` }],
+  }));
+
+  return (
+    <Animated.View style={style}>
+      <Bell size={22} color={theme.text} strokeWidth={2.5} />
+    </Animated.View>
+  );
+};
+
 interface IconButtonProps {
   children: React.ReactNode;
   onPress: () => void;
@@ -430,7 +549,7 @@ const GlassIconButton = ({
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => (scale.value = withSpring(1.15, { damping: 15 }))}
+      onPressIn={() => (scale.value = withSpring(0.97, { damping: 20, stiffness: 300 }))}
       onPressOut={() =>
         (scale.value = withSpring(1, { damping: 15, stiffness: 200 }))
       }
@@ -475,7 +594,7 @@ const HeaderIconButton = ({
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => (scale.value = withSpring(1.15, { damping: 15 }))}
+      onPressIn={() => (scale.value = withSpring(0.97, { damping: 20, stiffness: 300 }))}
       onPressOut={() =>
         (scale.value = withSpring(1, { damping: 15, stiffness: 200 }))
       }
@@ -523,7 +642,7 @@ const ScaleButton = ({
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => (scale.value = withSpring(1.15, { damping: 15 }))}
+      onPressIn={() => (scale.value = withSpring(0.97, { damping: 20, stiffness: 300 }))}
       onPressOut={() =>
         (scale.value = withSpring(1, { damping: 15, stiffness: 200 }))
       }
@@ -845,14 +964,39 @@ const PremiumAuroraBackground = ({ scrollX }: { scrollX: any }) => {
   );
 };
 
-const BannerCardItem = ({ item, theme, styles }: any) => {
+const BannerCardItem = ({ item, index, theme, styles }: any) => {
   const isDarkBanner = item.bgColor === "#1A1A1A";
   const bannerBg = isDarkBanner ? theme.text : item.bgColor;
   const bannerText = isDarkBanner ? theme.background : item.textColor;
 
   const scale = useSharedValue(1);
+  // ── Design Spell: first-card sway ────────────────────────────────────
+  // On first paint, card 1 leans left (translateX + slight rotate) then
+  // springs back — a physical hint that it's a swipeable stack, without
+  // relying on programmatic scroll (which is unreliable on web).
+  const hintX = useSharedValue(0);
+  const hintRot = useSharedValue(0);
+
+  useEffect(() => {
+    if (index !== 0) return;
+    hintX.value = withSequence(
+      withTiming(0, { duration: 900 }),
+      withTiming(-28, { duration: 380, easing: Easing.out(Easing.cubic) }),
+      withTiming(0, { duration: 720, easing: Easing.inOut(Easing.cubic) }),
+    );
+    hintRot.value = withSequence(
+      withTiming(0, { duration: 900 }),
+      withTiming(-0.035, { duration: 380, easing: Easing.out(Easing.cubic) }),
+      withTiming(0, { duration: 720, easing: Easing.inOut(Easing.cubic) }),
+    );
+  }, [index]);
+
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [
+      { translateX: hintX.value },
+      { rotate: `${hintRot.value}rad` },
+      { scale: scale.value },
+    ],
   }));
 
   return (
@@ -974,7 +1118,6 @@ export default function Home() {
   const scrollX = useSharedValue(0);
   const scrollY = useSharedValue(0);
   const lastIndex = useSharedValue(0);
-
   const updateActiveIndex = (index: number) => {
     setActiveIndex(index);
   };
@@ -1032,7 +1175,12 @@ export default function Home() {
   });
 
   return (
-    <View style={commonStyles.container}>
+    <MotiView
+      from={{ opacity: 0, translateY: 8 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: "timing", duration: 250, easing: Easing.out(Easing.ease) }}
+      style={commonStyles.container}
+    >
       {/* Inject raw CSS for the experimental corner-shape squircle fallback */}
       {Platform.OS === "web" && (
         <style>
@@ -1107,7 +1255,7 @@ export default function Home() {
                 <Search size={22} color={theme.text} strokeWidth={2.5} />
               </HeaderIconButton> */}
               <HeaderIconButton onPress={() => router.push("/notifications")}>
-                <Bell size={22} color={theme.text} strokeWidth={2.5} />
+                <WobbleBell />
                 <View style={styles.notificationDot} />
               </HeaderIconButton>
             </View>
@@ -1122,13 +1270,25 @@ export default function Home() {
         scrollEventThrottle={16}
       >
         <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-          <Text style={[styles.greetingLargeText, { color: theme.text }]}>
-            Hello Hanika!
-          </Text>
+          <SparkleGreeting
+            text="Hello Hanika!"
+            style={[styles.greetingLargeText, { color: theme.text }]}
+          />
         </View>
 
         {/* Simple Carousel Section */}
-        <View style={styles.carouselContainer}>
+        <MotiView
+          from={{ opacity: 0, translateY: 32, scale: 0.96 }}
+          animate={{ opacity: 1, translateY: 0, scale: 1 }}
+          transition={{
+            type: "spring",
+            damping: 18,
+            stiffness: 180,
+            mass: 0.9,
+            delay: 250,
+          }}
+          style={styles.carouselContainer}
+        >
           <Animated.FlatList
             data={BANNER_DATA}
             keyExtractor={(item) => item.id.toString()}
@@ -1149,8 +1309,13 @@ export default function Home() {
               paddingHorizontal: (width - CARD_WIDTH) / 2,
               alignItems: "stretch",
             }}
-            renderItem={({ item }) => (
-              <BannerCardItem item={item} theme={theme} styles={styles} />
+            renderItem={({ item, index }) => (
+              <BannerCardItem
+                item={item}
+                index={index}
+                theme={theme}
+                styles={styles}
+              />
             )}
           />
 
@@ -1166,9 +1331,19 @@ export default function Home() {
               />
             ))}
           </View>
-        </View>
+        </MotiView>
 
-        <View style={{ paddingHorizontal: 20 }}>
+        <MotiView
+          from={{ opacity: 0, translateY: 24 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{
+            type: "spring",
+            damping: 20,
+            stiffness: 200,
+            delay: 450,
+          }}
+          style={{ paddingHorizontal: 20 }}
+        >
           {/* Announcements Section */}
           <SectionHeader
             title="Announcements"
@@ -1189,12 +1364,23 @@ export default function Home() {
               "https://images.unsplash.com/photo-1600132806608-231446b2e7af?q=80&w=1974&auto=format&fit=crop",
             ]}
           />
-        </View>
+        </MotiView>
 
         {/* What's Growing Around You - 3D Carousel Section */}
-        <WhatsGrowingSection />
+        <MotiView
+          from={{ opacity: 0, translateY: 24 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{
+            type: "spring",
+            damping: 20,
+            stiffness: 200,
+            delay: 600,
+          }}
+        >
+          <WhatsGrowingSection />
+        </MotiView>
       </Animated.ScrollView>
-    </View>
+    </MotiView>
   );
 }
 

@@ -2,13 +2,14 @@ import { useTheme } from "@/hooks/use-theme";
 import { useRouter } from "expo-router";
 import { ChevronLeft, Lock, Mail } from "lucide-react-native";
 import { MotiView } from "moti";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -17,6 +18,8 @@ import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
 import { Input } from "../components/Input";
 import { SocialAuthButton } from "../components/SocialAuthButton";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Login() {
   const theme = useTheme();
@@ -27,10 +30,11 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(true);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const passwordRef = useRef<TextInput>(null);
 
   const handleLogin = () => {
     let isValid = true;
-    if (!email.trim() || !email.includes("@")) {
+    if (!EMAIL_RE.test(email.trim())) {
       setEmailError("Please enter a valid email address");
       isValid = false;
     }
@@ -40,7 +44,7 @@ export default function Login() {
     }
 
     if (isValid) {
-      router.push("/(tabs)/home");
+      router.replace("/(tabs)/home");
     }
   };
 
@@ -64,6 +68,9 @@ export default function Login() {
                 }
               }}
               style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={10}
             >
               <ChevronLeft size={28} color={theme.text} strokeWidth={2.5} />
             </TouchableOpacity>
@@ -80,7 +87,12 @@ export default function Login() {
               </Text>
             </MotiView>
 
-            <View style={styles.formContainer}>
+            <MotiView
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: "timing", duration: 600, delay: 150 }}
+              style={styles.formContainer}
+            >
               <Input
                 label="Email ID"
                 placeholder="Enter Email ID"
@@ -92,9 +104,16 @@ export default function Login() {
                 error={emailError}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="username"
+                autoComplete="email"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                blurOnSubmit={false}
                 Icon={Mail}
               />
               <Input
+                ref={passwordRef}
                 label="Password"
                 placeholder="Enter Password"
                 value={password}
@@ -104,6 +123,10 @@ export default function Login() {
                 }}
                 error={passwordError}
                 secureTextEntry
+                textContentType="password"
+                autoComplete="password"
+                returnKeyType="go"
+                onSubmitEditing={handleLogin}
                 Icon={Lock}
               />
 
@@ -116,6 +139,9 @@ export default function Login() {
 
                 <TouchableOpacity
                   onPress={() => router.push("/forgot-password")}
+                  accessibilityRole="button"
+                  accessibilityLabel="Forgot password"
+                  hitSlop={10}
                 >
                   <Text style={styles.forgotText}>Forgot Password?</Text>
                 </TouchableOpacity>
@@ -138,22 +164,29 @@ export default function Login() {
                 <SocialAuthButton provider="facebook" />
                 <SocialAuthButton provider="google" />
               </View>
-            </View>
+              </MotiView>
 
             {/* Spacer */}
             <View style={{ flex: 1 }} />
 
-            <View style={styles.footerContainer}>
+            <MotiView
+              from={{ opacity: 0, translateY: 10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: "timing", duration: 600, delay: 300 }}
+              style={styles.footerContainer}
+            >
               <Text style={styles.footerText}>
                 Don't have an account?{" "}
                 <Text
                   style={styles.footerLink}
                   onPress={() => router.push("/signup")}
+                  accessibilityRole="link"
+                  accessibilityLabel="Sign up for a new account"
                 >
                   Sign Up
                 </Text>
               </Text>
-            </View>
+            </MotiView>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

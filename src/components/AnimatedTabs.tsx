@@ -47,58 +47,39 @@ const AnimatedTabItem = ({ tab, isActive, isFirst, isLast, count, onPress, onLay
       onPress={onPress}
       style={[styles.tabItemContainer, { zIndex: 2 }]}
     >
-
-      {isActive ? (
-        <>
-          {Icon && (
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+        {Icon && (
+          <View style={{ marginRight: 6 }}>
             <Icon
               size={14}
-              color={theme.primaryForeground}
-              style={{ marginRight: 6 }}
+              color={isActive ? theme.primaryForeground : theme.textSecondary}
             />
-          )}
-          <Text
-            style={[
-              styles.tabText,
-              styles.activeTabText,
-              { color: theme.primaryForeground },
-            ]}
-          >
-            {tab.label}
-          </Text>
-        </>
-      ) : (
-        <>
-          {Icon && (
-            <Icon
-              size={14}
-              color={theme.textSecondary}
-              style={{ marginRight: 6 }}
-            />
-          )}
-          <Text style={[styles.tabText, { color: theme.textSecondary }]}>
-            {tab.label}
-          </Text>
-        </>
-      )}
+          </View>
+        )}
+        <Text
+          style={[
+            styles.tabText,
+            isActive && styles.activeTabText,
+            { color: isActive ? theme.primaryForeground : theme.textSecondary },
+          ]}
+        >
+          {tab.label}
+        </Text>
 
-      {count !== undefined &&
-        count > 0 &&
-        (isActive ? (
-          <Text
-            style={[
-              styles.tabCount,
-              styles.activeTabCount,
-              { color: theme.primaryForeground },
-            ]}
-          >
-            {count}
-          </Text>
-        ) : (
-          <Text style={[styles.tabCount, { color: theme.textSecondary }]}>
-            {count}
-          </Text>
-        ))}
+        {count !== undefined && count > 0 && (
+          <View style={{ marginLeft: 6 }}>
+            <Text
+              style={[
+                styles.tabCount,
+                isActive && styles.activeTabCount,
+                { color: isActive ? theme.primaryForeground : theme.textSecondary },
+              ]}
+            >
+              {count}
+            </Text>
+          </View>
+        )}
+      </View>
     </Pressable>
   );
 };
@@ -166,39 +147,39 @@ export function AnimatedTabs({
       style={styles.tabsWrapper}
     >
       <View style={styles.tabsRelative}>
+        {/* Static Inactive Backgrounds (Isolated from gap) */}
+        {tabs.map((tab, index) => {
+          const m = tabMeasurements[tab.id];
+          if (!m) return null;
+          return (
+            <View
+              key={`bg-${tab.id}`}
+              style={[
+                {
+                  position: "absolute",
+                  left: m.x,
+                  top: 0,
+                  bottom: 0,
+                  width: m.width,
+                  backgroundColor: theme.backgroundElement,
+                  zIndex: 0,
+                },
+                {
+                  borderTopLeftRadius: index === 0 ? 24 : 12,
+                  borderBottomLeftRadius: index === 0 ? 24 : 12,
+                  borderTopRightRadius: index === tabs.length - 1 ? 24 : 12,
+                  borderBottomRightRadius: index === tabs.length - 1 ? 24 : 12,
+                }
+              ]}
+            />
+          );
+        })}
+
+        {/* Sliding Indicator (Isolated from gap) */}
+        <Animated.View style={indicatorStyle} pointerEvents="none" />
+
         {/* The individual tabs */}
         <View style={styles.tabsLayoutRow}>
-          {/* Static Inactive Backgrounds */}
-          {tabs.map((tab, index) => {
-            const m = tabMeasurements[tab.id];
-            if (!m) return null;
-            return (
-              <View
-                key={`bg-${tab.id}`}
-                style={[
-                  {
-                    position: "absolute",
-                    left: m.x,
-                    top: 0,
-                    bottom: 0,
-                    width: m.width,
-                    backgroundColor: theme.backgroundElement,
-                    zIndex: 0,
-                  },
-                  {
-                    borderTopLeftRadius: index === 0 ? 24 : 12,
-                    borderBottomLeftRadius: index === 0 ? 24 : 12,
-                    borderTopRightRadius: index === tabs.length - 1 ? 24 : 12,
-                    borderBottomRightRadius: index === tabs.length - 1 ? 24 : 12,
-                  }
-                ]}
-              />
-            );
-          })}
-
-          {/* Sliding Indicator */}
-          <Animated.View style={indicatorStyle} pointerEvents="none" />
-          
           {tabs.map((tab, index) => {
             const isActive = activeTab === tab.id;
             const isFirst = index === 0;
@@ -248,12 +229,10 @@ const createStyles = (theme: any) =>
     tabItemContainer: {
       paddingHorizontal: 16,
       paddingVertical: 10,
-      flexDirection: "row",
+      justifyContent: "center",
       alignItems: "center",
-      gap: 0,
       position: "relative",
       minWidth: 60,
-      justifyContent: "center",
       zIndex: 2,
     },
     tabBg: {
@@ -264,6 +243,9 @@ const createStyles = (theme: any) =>
       fontFamily: theme.fonts.medium,
       fontSize: 15,
       zIndex: 10,
+      includeFontPadding: false,
+      textAlignVertical: "center",
+      textAlign: "center",
     },
     activeTabText: {
       fontFamily: theme.fonts.bold,
@@ -272,9 +254,11 @@ const createStyles = (theme: any) =>
     tabCount: {
       fontFamily: theme.fonts.bold,
       fontSize: 12,
-      marginLeft: 4,
-      transform: [{ translateY: -2 }],
+      transform: [{ translateY: -1 }],
       zIndex: 10,
+      includeFontPadding: false,
+      textAlignVertical: "center",
+      textAlign: "center",
     },
     activeTabCount: {
       // styles handled by AutoContrastText

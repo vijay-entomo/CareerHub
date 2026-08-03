@@ -205,7 +205,10 @@ export default function ProfileSettings() {
           title="Log Out"
           variant="ghost"
           fullWidth
-          onPress={() => router.replace("/login")}
+          onPress={() => {
+            router.dismissAll?.();
+            router.replace("/login");
+          }}
           icon={<LogOut size={20} color="#FF3B30" />}
           textStyle={{ color: "#FF3B30" }}
           style={{ backgroundColor: theme.backgroundElement, marginTop: 8 }}

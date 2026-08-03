@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { TextInput, View, Text, StyleSheet, TextInputProps, TouchableOpacity } from 'react-native';
 import { useTheme } from "@/hooks/use-theme";
 import { Eye, EyeOff, LucideIcon } from 'lucide-react-native';
@@ -11,7 +11,7 @@ interface InputProps extends TextInputProps {
   Icon?: LucideIcon;
 }
 
-export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputProps) => {
+export const Input = forwardRef<TextInput, InputProps>(({ label, error, secureTextEntry, Icon, ...props }, ref) => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const [isSecureVisible, setIsSecureVisible] = useState(secureTextEntry);
@@ -20,25 +20,29 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      
+
       <View style={[
         styles.inputContainer,
         isFocused ? styles.inputFocused : null,
         error ? styles.inputError : null
       ]}>
-        
+
         {Icon && (
-          <Icon 
-            size={20} 
-            color={theme.textSecondary} 
-            style={styles.leftIcon} 
+          <Icon
+            size={20}
+            color={theme.textSecondary}
+            style={styles.leftIcon}
           />
         )}
 
         <TextInput
+          ref={ref}
           style={styles.input}
           placeholderTextColor={theme.textSecondary}
           secureTextEntry={isSecureVisible}
+          accessibilityLabel={label}
+          accessibilityInvalid={!!error}
+          accessibilityErrorMessage={error || undefined}
           onFocus={(e) => {
             setIsFocused(true);
             props.onFocus?.(e);
@@ -51,7 +55,13 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
         />
 
         {secureTextEntry && (
-          <TouchableOpacity onPress={() => setIsSecureVisible(!isSecureVisible)} style={styles.rightAction} hitSlop={10}>
+          <TouchableOpacity
+            onPress={() => setIsSecureVisible(!isSecureVisible)}
+            style={styles.rightAction}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={isSecureVisible ? "Show password" : "Hide password"}
+          >
             {isSecureVisible ? (
               <EyeOff size={20} color={theme.textSecondary} />
             ) : (
@@ -60,7 +70,10 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
           </TouchableOpacity>
         )}
       </View>
-      <View style={styles.errorContainer}>
+      <View
+        style={styles.errorContainer}
+        accessibilityLiveRegion="polite"
+      >
         <AnimatePresence>
           {error ? (
             <MotiView
@@ -76,7 +89,8 @@ export const Input = ({ label, error, secureTextEntry, Icon, ...props }: InputPr
       </View>
     </View>
   );
-};
+});
+Input.displayName = 'Input';
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {

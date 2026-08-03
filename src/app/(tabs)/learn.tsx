@@ -6,6 +6,7 @@ import { useCommonStyles } from "@/hooks/use-common-styles";
 import { useTheme } from "@/hooks/use-theme";
 import { BlurView } from "expo-blur";
 import { router } from "expo-router";
+import { MotiView } from "moti";
 import {
   ArrowRight,
   Bookmark,
@@ -38,6 +39,7 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  Easing,
   interpolate,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -394,7 +396,12 @@ export default function Learn() {
   };
 
   return (
-    <View style={commonStyles.container}>
+    <MotiView
+      from={{ opacity: 0, translateY: 8 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: "timing", duration: 250, easing: Easing.out(Easing.ease) }}
+      style={commonStyles.container}
+    >
       <Header
         title="Learn"
         showBack={false}
@@ -706,7 +713,7 @@ export default function Learn() {
           </Animated.ScrollView>
         </View>
       </Animated.ScrollView>
-    </View>
+    </MotiView>
   );
 }
 

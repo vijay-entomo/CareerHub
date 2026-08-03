@@ -17,10 +17,12 @@ export const SocialAuthButton = ({ provider, onPress }: SocialAuthButtonProps) =
   const label = provider === "facebook" ? "Facebook" : "Google";
 
   return (
-    <TouchableOpacity 
-      style={styles.socialButton} 
+    <TouchableOpacity
+      style={styles.socialButton}
       onPress={onPress}
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={`Sign in with ${label}`}
     >
       <View style={styles.socialIconContainer}>
         <Icon size={20} />

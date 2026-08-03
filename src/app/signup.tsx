@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,18 +6,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TextInput,
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AnimatePresence, MotiView } from "moti";
+import { MotiView } from "moti";
 import { useRouter } from "expo-router";
-import { Check, Mail, Lock, ChevronLeft } from "lucide-react-native";
+import { Mail, Lock, ChevronLeft } from "lucide-react-native";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
 import { Checkbox } from "../components/Checkbox";
 import { SocialAuthButton } from "../components/SocialAuthButton";
-import { BorderRadius } from "../constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Signup() {
   const theme = useTheme();
@@ -32,25 +34,32 @@ export default function Signup() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [agreeError, setAgreeError] = useState("");
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
 
   const handleSignUp = () => {
     let isValid = true;
-    
-    if (!email.trim() || !email.includes("@")) {
+    let firstInvalid: React.RefObject<TextInput | null> | null = null;
+
+    if (!EMAIL_RE.test(email.trim())) {
       setEmailError("Please enter a valid email address");
       isValid = false;
+      firstInvalid = firstInvalid ?? emailRef;
     }
-    
+
     if (!password.trim() || password.length < 6) {
       setPasswordError("Password must be at least 6 characters");
       isValid = false;
+      firstInvalid = firstInvalid ?? passwordRef;
     }
-    
+
     if (password !== confirmPassword) {
       setConfirmPasswordError("Passwords do not match");
       isValid = false;
+      firstInvalid = firstInvalid ?? confirmRef;
     }
-    
+
     if (!agree) {
       setAgreeError("You must agree to the terms");
       isValid = false;
@@ -59,7 +68,9 @@ export default function Signup() {
     }
 
     if (isValid) {
-      router.push("/otp");
+      router.replace("/otp");
+    } else if (firstInvalid) {
+      setTimeout(() => firstInvalid?.current?.focus(), 50);
     }
   };
 
@@ -79,10 +90,13 @@ export default function Signup() {
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace("/");
+                  router.replace("/login");
                 }
               }}
               style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={10}
             >
               <ChevronLeft size={28} color={theme.text} strokeWidth={2.5} />
             </TouchableOpacity>
@@ -99,8 +113,14 @@ export default function Signup() {
               </Text>
             </MotiView>
 
-            <View style={styles.formContainer}>
+            <MotiView
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: "timing", duration: 600, delay: 150 }}
+              style={styles.formContainer}
+            >
               <Input
+                ref={emailRef}
                 label="Email ID"
                 placeholder="Enter Email ID"
                 value={email}
@@ -108,24 +128,48 @@ export default function Signup() {
                 error={emailError}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="username"
+                autoComplete="email"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                blurOnSubmit={false}
                 Icon={Mail}
               />
               <Input
+                ref={passwordRef}
                 label="New Password"
-                placeholder="Enter New Password"
+                placeholder="At least 6 characters"
                 value={password}
-                onChangeText={(text) => { setPassword(text); setPasswordError(""); }}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setPasswordError("");
+                  if (confirmPassword && text === confirmPassword) setConfirmPasswordError("");
+                }}
                 error={passwordError}
                 secureTextEntry
+                textContentType="newPassword"
+                autoComplete="password-new"
+                returnKeyType="next"
+                onSubmitEditing={() => confirmRef.current?.focus()}
+                blurOnSubmit={false}
                 Icon={Lock}
               />
               <Input
+                ref={confirmRef}
                 label="Confirm Password"
-                placeholder="Enter Confirm Password"
+                placeholder="Re-enter password"
                 value={confirmPassword}
-                onChangeText={(text) => { setConfirmPassword(text); setConfirmPasswordError(""); }}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (!password || text === password) setConfirmPasswordError("");
+                }}
                 error={confirmPasswordError}
                 secureTextEntry
+                textContentType="newPassword"
+                autoComplete="password-new"
+                returnKeyType="go"
+                onSubmitEditing={handleSignUp}
                 Icon={Lock}
               />
 
@@ -136,7 +180,15 @@ export default function Signup() {
                     onChange={(val) => { setAgree(val); setAgreeError(""); }} 
                     label="I Agree With The Terms And Conditions" 
                   />
-                  {agreeError ? <Text style={styles.errorText}>{agreeError}</Text> : null}
+                  {agreeError ? (
+                    <Text
+                      style={styles.errorText}
+                      accessibilityRole="alert"
+                      accessibilityLiveRegion="polite"
+                    >
+                      {agreeError}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
 
@@ -157,21 +209,28 @@ export default function Signup() {
                 <SocialAuthButton provider="facebook" />
                 <SocialAuthButton provider="google" />
               </View>
-            </View>
+            </MotiView>
 
             <View style={{ flex: 1 }} />
 
-            <View style={styles.footerContainer}>
+            <MotiView
+              from={{ opacity: 0, translateY: 10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: "timing", duration: 600, delay: 300 }}
+              style={styles.footerContainer}
+            >
               <Text style={styles.footerText}>
                 Already have an account?{" "}
                 <Text
                   style={styles.footerLink}
-                  onPress={() => router.push("/login")}
+                  onPress={() => router.replace("/login")}
+                  accessibilityRole="link"
+                  accessibilityLabel="Sign in to existing account"
                 >
                   Sign In
                 </Text>
               </Text>
-            </View>
+            </MotiView>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

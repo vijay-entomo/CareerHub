@@ -25,12 +25,15 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  Easing,
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
+import { MotiView } from "moti";
 import { BottomSheetModal } from "../../components/BottomSheetModal";
 import { GlassIconButton, Header } from "../../components/Header";
 import { Button } from "@/components/Button";
+import { IconTile } from "@/components/IconTile";
 
 const MENU_ITEMS = [
   {
@@ -137,7 +140,12 @@ export default function More() {
   });
 
   return (
-    <View style={commonStyles.container}>
+    <MotiView
+      from={{ opacity: 0, translateY: 8 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: "timing", duration: 250, easing: Easing.out(Easing.ease) }}
+      style={commonStyles.container}
+    >
       <Header
         title="Explore"
         showBack={false}
@@ -356,14 +364,11 @@ export default function More() {
 
           <View style={styles.emptyCardsCol}>
             <View style={styles.emptyCard}>
-              <View
-                style={[
-                  styles.emptyCardIconWrapper,
-                  { backgroundColor: theme.primary + "15" },
-                ]}
-              >
-                <UploadCloud size={32} color={theme.primary} strokeWidth={2} />
-              </View>
+              <IconTile
+                Icon={UploadCloud}
+                size="xl"
+                style={styles.emptyCardIconWrapper}
+              />
               <Text style={[styles.emptyCardTitle, { color: theme.text }]}>
                 Upload Existing Resume
               </Text>
@@ -379,14 +384,11 @@ export default function More() {
             </View>
 
             <View style={styles.emptyCard}>
-              <View
-                style={[
-                  styles.emptyCardIconWrapper,
-                  { backgroundColor: theme.primary + "15" },
-                ]}
-              >
-                <PenTool size={32} color={theme.primary} strokeWidth={2} />
-              </View>
+              <IconTile
+                Icon={PenTool}
+                size="xl"
+                style={styles.emptyCardIconWrapper}
+              />
               <Text style={[styles.emptyCardTitle, { color: theme.text }]}>
                 Build from Scratch
               </Text>
@@ -407,7 +409,7 @@ export default function More() {
           </View>
         </ScrollView>
       </BottomSheetModal>
-    </View>
+    </MotiView>
   );
 }
 
@@ -559,11 +561,6 @@ const createStyles = (theme: any) =>
       width: "100%",
     },
     emptyCardIconWrapper: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      alignItems: "center",
-      justifyContent: "center",
       marginBottom: 20,
     },
     emptyCardTitle: {

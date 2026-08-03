@@ -59,8 +59,7 @@ export function Button({
 
     switch (variant) {
       case "primary":
-        // return pressed ? theme.primary + "E6" : theme.primary;
-        return pressed ? "#ff0000" : "#ff0000";
+        return pressed ? theme.ctaColor + "E6" : theme.ctaColor;
       case "secondary":
         return pressed
           ? theme.mode === "dark"
